@@ -21,7 +21,7 @@ CREATE TYPE T_Compite_en;
 CREATE TYPE T_Deporte;
 
 CREATE OR REPLACE TYPE T_Participante AS OBJECT (
-	Dorsal VARCHAR2(4),
+	Dorsal NUMBER(4),
 	Nombre VARCHAR2(16),
 	Apellidos VARCHAR2(32),
 	Nacimiento DATE,
@@ -29,7 +29,7 @@ CREATE OR REPLACE TYPE T_Participante AS OBJECT (
 	Peso NUMBER(6,3),
 	Altura NUMBER(3,2),
 	Origen REF T_Pais,
-	Deportes T_Compite_en
+	Deportes T_Compite_en,
 	Marcas T_Patrocinado_por,
 	MEMBER FUNCTION Edad RETURN NUMBER
 );
@@ -49,7 +49,7 @@ CREATE OR REPLACE TYPE T_Deporte AS OBJECT (
 	Record NUMBER,
 	Fecha_Ini DATETIME,
 	Fecha_Fin DATETIME,
-	NParticipantes NUMBER,
+	Participantes T_Participa,
 	MedallasOk BOOLEAN
 );
 
@@ -81,3 +81,4 @@ CREATE OR REPLACE TYPE T_Deporte_Fuerza UNDER T_Deporte (
 CREATE OR REPLACE TYPE T_Deporte_Combate UNDER T_Deporte (
 	GrupoEdad VARCHAR2(8)
 );
+/
