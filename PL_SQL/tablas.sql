@@ -50,7 +50,7 @@ CREATE TABLE Puntuacion OF T_Puntuacion (
 	Medalla NOT NULL,
 	CONSTRAINT PK_Puntuacion PRIMARY KEY (Participante, Deporte)
 );
-
+/* -- ¿INNECESARIO? --
 CREATE TABLE Deporte_Acuatico OF T_Deporte_Acuatico;
 
 CREATE TABLE Deporte_Velocidad OF T_Deporte_Velocidad;
@@ -59,5 +59,6 @@ CREATE TABLE Deporte_Pelota OF T_Deporte_Pelota;
 
 CREATE TABLE Deporte_Fuerza OF T_Deporte_Fuerza;
 
-CREATE TABLE Deporte_Combate OF T_Deporte_Combate; 
+CREATE TABLE Deporte_Combate OF T_Deporte_Combate;
+*/ 
 /
