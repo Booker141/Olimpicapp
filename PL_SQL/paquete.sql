@@ -462,30 +462,293 @@ END GestionParticipantes;
 
 /*Cabecera de Gestión de Marcas*/
 CREATE OR REPLACE PACKAGE GestionMarcas AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Nif IN Marca.Nif%TYPE
+	) RETURN NUMBER;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Nif IN Marca.Nif%TYPE,
+		Nombre IN Marca.Nombre%TYPE,
+		Empresa IN Marca.Empresa%TYPE
+	) RETURN VARCHAR2;
+	
+	/*UPDATE*/
+	FUNCTION set_Nif(
+		Nif IN Marca.Nif%TYPE,
+		NuevoNif IN Marca.Nif%TYPE
+	) RETURN VARCHAR2;
+	FUNCTION set_Nombre(
+		Nif IN Marca.Nif%TYPE,
+		Nombre IN Marca.Nombre%TYPE
+	) RETURN VARCHAR2;
+	FUNCTION set_Empresa(
+		Nif IN Marca.Nif%TYPE,
+		Empresa IN Marca.Empresa%TYPE
+	) RETURN VARCHAR2;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Nif IN Marca.Nif%TYPE
+	) RETURN VARCHAR2;
+	
 END GestionMarcas;
 
 /*Cuerpo de Gestión de Marcas*/
 CREATE OR REPLACE PACKAGE BODY GestionMarcas AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Nif IN Marca.Nif%TYPE
+	) RETURN NUMBER IS
+	BEGIN
+		RETURN SELECT count(*) FROM Marca WHERE Marca.Nif = Nif;
+	END aux;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Nif IN Marca.Nif%TYPE,
+		Nombre IN Marca.Nombre%TYPE,
+		Empresa IN Marca.Empresa%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		INSERT INTO Marca VALUES(Nif, Nombre, Empresa);
+		RETURN 'La marca indicada se ha registrado con éxito.';
+	EXCEPTION
+		WHEN DUP_VAL_ON_INDEX THEN
+			RETURN 'No se ha registrado la marca indicada. Ya existe una marca con ese Nif.';
+	END insertar;
+	
+	/*UPDATE*/
+	FUNCTION set_Nif(
+		Nif IN Marca.Nif%TYPE,
+		NuevoNif IN Marca.Nif%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Nif) > 0) THEN
+			UPDATE Marca SET Marca.Nif = NuevoNif WHERE Marca.Nif = Nif;
+			RETURN 'Marca actualizada con éxito.';
+		ELSE
+			RETURN 'No existe ninguna marca con el Nif introducido.';
+		END IF;
+	END set_Nif;
+	FUNCTION set_Nombre(
+		Nif IN Marca.Nif%TYPE,
+		Nombre IN Marca.Nombre%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Nif) > 0) THEN
+			UPDATE Marca SET Marca.Nombre = Nombre WHERE Marca.Nif = Nif;
+			RETURN 'Marca actualizada con éxito.';
+		ELSE
+			RETURN 'No existe ninguna marca con el Nif introducido.';
+		END IF;
+	END set_Nombre;
+	FUNCTION set_Empresa(
+		Nif IN Marca.Nif%TYPE,
+		Empresa IN Marca.Empresa%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Nif) > 0) THEN
+			UPDATE Marca SET Marca.Empresa = Empresa WHERE Marca.Nif = Nif;
+			RETURN 'Marca actualizada con éxito.';
+		ELSE
+			RETURN 'No existe ninguna marca con el Nif introducido.';
+		END IF;
+	END set_Empresa;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Nif IN Marca.Nif%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Nif) > 0) THEN
+			DELETE FROM Marca WHERE Marca.Nif = Nif;
+			RETURN 'La marca indicada se ha eliminado correctamente.';
+		ELSE
+			RETURN 'No existe ninguna marca con el Nif introducido.';
+		END IF;
+	END eliminar;
 END GestionMarcas;
 
 /*Cabecera de Gestión de Paises*/
 CREATE OR REPLACE PACKAGE GestionPaises AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Abrev IN Pais.Abreviatura%TYPE
+	) RETURN NUMBER;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Abrev IN Pais.Abreviatura%TYPE,
+		Nombre IN Pais.Nombre%TYPE
+	) RETURN VARCHAR2;
+	
+	/*UPDATE*/
+	FUNCTION set_Abreviatura(
+		Abrev IN Pais.Abreviatura%TYPE,
+		NuevaAbrev IN Pais.Abreviatura%TYPE
+	) RETURN VARCHAR2;
+	FUNCTION set_Nombre(
+		Abrev IN Pais.Abreviatura%TYPE,
+		Nombre IN Pais.Nombre%TYPE
+	) RETURN VARCHAR2;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Abrev IN Pais.Abreviatura%TYPE
+	) RETURN VARCHAR2;
 END GestionPaises;
 
 /*Cuerpo de Gestión de Paises*/
 CREATE OR REPLACE PACKAGE BODY GestionPaises AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Abrev IN Pais.Abreviatura%TYPE
+	) RETURN NUMBER IS
+	BEGIN
+		RETURN SELECT count(*) FROM Pais WHERE Pais.Abreviatura = Abrev;
+	END aux;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Abrev IN Pais.Abreviatura%TYPE,
+		Nombre IN Pais.Nombre%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		INSERT INTO Pais VALUES(Abrev, Nombre);
+		RETURN 'El país indicado se ha registrado correctamente.';
+	EXCEPTION
+		WHEN DUP_VAL_ON_INDEX THEN
+			RETURN 'No se ha insertado el país indicado. Ya existe un país con esa abreviatura.';
+	END insertar;
+	
+	/*UPDATE*/
+	FUNCTION set_Abreviatura(
+		Abrev IN Pais.Abreviatura%TYPE,
+		NuevaAbrev IN Pais.Abreviatura%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Abrev) > 0) THEN
+			UPDATE Pais SET Pais.Abreviatura = NuevaAbrev WHERE Pais.Abreviatura = Abrev;
+			RETURN 'El país indicado se ha actualizado con éxito.';
+		ELSE
+			RETURN 'No existe ningún país con la abreviatura introducida.';
+		END IF;
+	END set_Abreviatura;
+	FUNCTION set_Nombre(
+		Abrev IN Pais.Abreviatura%TYPE,
+		Nombre IN Pais.Nombre%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Abrev) > 0) THEN
+			UPDATE Pais SET Pais.Nombre = Nombre WHERE Pais.Abreviatura = Abrev;
+			RETURN 'El país indicado se ha actualizado con éxito.';
+		ELSE
+			RETURN 'No existe ningún país con la abreviatura introducida.';
+		END IF;
+	END set_Nombre;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Abrev IN Pais.Abreviatura%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Abrev) > 0) THEN
+			DELETE FROM Pais WHERE Pais.Abreviatura = Abrev;
+			RETURN 'El país indicado se ha eliminado con éxito.';
+		ELSE
+			RETURN 'No existe ningún país con la abreviatura introducida.';
+		END IF;
+	END eliminar;
 END GestionPaises;
 
 /*Cabecera de Gestión de Imágenes*/
 CREATE OR REPLACE PACKAGE GestionImagenes AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Id IN Imagen.Id%TYPE
+	) RETURN NUMBER;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Id IN Imagen.Id%TYPE,
+		Descripcion IN Imagen.Descripcion%TYPE,
+		Recurso IN Imagen.Recurso%TYPE
+	) RETURN VARCHAR2;
+	
+	/*UPDATE*/
+	FUNCTION set_Descripcion(
+		Id IN Imagen.Id%TYPE,
+		Descripcion IN Imagen.Descripcion%TYPE
+	) RETURN VARCHAR2;
+	FUNCTION set_Recurso(
+		Id IN Imagen.Id%TYPE,
+		Recurso IN Imagen.Recurso%TYPE
+	) RETURN VARCHAR2;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Id IN Imagen.Id%TYPE
+	) RETURN VARCHAR2;
 END GestionImagenes;
 
 /*Cuerpo de Gestión de Imágenes*/
 CREATE OR REPLACE PACKAGE BODY GestionImagenes AS
-
+	/*Auxiliar*/
+	FUNCTION aux(
+		Id IN Imagen.Id%TYPE
+	) RETURN NUMBER IS
+	BEGIN
+		RETURN SELECT count(*) FROM Imagen WHERE Imagen.Id = Id;
+	END aux;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Descripcion IN Imagen.Descripcion%TYPE,
+		Recurso IN Imagen.Recurso%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		INSERT INTO Imagen VALUES(NULL, Descripcion, Recurso);
+		RETURN 'La imagen indicada se ha registrado correctamente.';
+	END insertar;
+	
+	/*UPDATE*/
+	FUNCTION set_Descripcion(
+		Id IN Imagen.Id%TYPE,
+		Descripcion IN Imagen.Descripcion%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Id) > 0) THEN
+			UPDATE Imagen SET Imagen.Descripcion = Descripcion WHERE Imagen.Id = Id;
+			RETURN 'La imagen indicada se ha modificado con éxito.';
+		ELSE
+			RETURN 'No existe ninguna imagen asociada al ID indicado.';
+		END IF;
+	END set_Descripcion;
+	FUNCTION set_Recurso(
+		Id IN Imagen.Id%TYPE,
+		Recurso IN Imagen.Recurso%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Id) > 0) THEN
+			UPDATE Imagen SET Imagen.Recurso = Recurso WHERE Imagen.Id = Id;
+			RETURN 'La imagen indicada se ha modificado con éxito.';
+		ELSE
+			RETURN 'No existe ninguna imagen asociada al ID indicado.';
+		END IF;
+	END set_Recurso;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Id IN Imagen.Id%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Id) > 0) THEN
+			DELETE FROM Imagen WHERE Imagen.Id = Id;
+			RETURN 'La imagen indicada se ha eliminado con éxito.';
+		ELSE
+			RETURN 'No existe ninguna imagen asociada al ID indicado.';
+		END IF;
+	END eliminar;
 END GestionImagenes;
