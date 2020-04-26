@@ -38,6 +38,8 @@ CREATE OR REPLACE PACKAGE GestionDeportes AS
 	
 	/*DELETE*/
 	FUNCTION eliminar(Id IN Deporte.Id%TYPE) RETURN VARCHAR2;
+	
+	/*Para el disparador*/
 	FUNCTION asignaMedallas(Id IN Deporte.Id%TYPE) RETURN NUMBER;
 END GestionDeportes;
 
@@ -752,3 +754,127 @@ CREATE OR REPLACE PACKAGE BODY GestionImagenes AS
 		END IF;
 	END eliminar;
 END GestionImagenes;
+
+/*Cabecera de GestionPuntuacion*/
+CREATE OR REPLACE PACKAGE GestionPuntuacion AS
+	/*Auxiliar*/
+	FUNCTION aux(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE
+	) RETURN NUMBER;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		Valor IN Puntuacion.Valor%TYPE
+	) RETURN VARCHAR2;
+	
+	/*UPDATE*/
+	FUNCTION set_Participante(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		NuevoPart IN T_Participante%ROWTYPE
+	) RETURN VARCHAR2;
+	
+	FUNCTION set_Deporte(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		NuevoDep IN T_Deporte%ROWTYPE
+	) RETURN VARCHAR2;
+	
+	FUNCTION set_Valor(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		Valor IN Puntuacion.Valor%TYPE
+	) RETURN VARCHAR2;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Participante%ROWTYPE
+	) RETURN VARCHAR2;
+END GestionPuntuacion;
+
+/*Cuerpo de GestionPuntuacion*/
+CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
+/*Auxiliar*/
+	FUNCTION aux(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE
+	) RETURN NUMBER IS
+	BEGIN
+		RETURN SELECT count(*) FROM Puntuacion WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+	END aux;
+	
+	/*INSERT*/
+	FUNCTION insertar(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		Valor IN Puntuacion.Valor%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		INSERT INTO Puntuacion VALUES(Valor, 0, REF(Participante), REF(Deporte));
+		RETURN 'La puntuación para el participante y deporte indicados se ha registrado correctamente.';
+	EXCEPTION
+		WHEN DUP_VAL_ON_INDEX THEN
+			RETURN 'Ya existe una puntuación asociada al participante y deporte indicados.';
+	END insertar;
+	
+	/*UPDATE*/
+	FUNCTION set_Participante(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		NuevoPart IN T_Participante%ROWTYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Participante, Deporte) > 0) THEN
+			UPDATE Puntuacion SET Puntuacion.Participante = REF(NuevoPart) WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			RETURN 'La puntuación se ha actualizado con éxito.';
+		ELSE
+			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
+		END IF;
+	END set_Participante;
+	
+	FUNCTION set_Deporte(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		NuevoDep IN T_Deporte%ROWTYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Participante, Deporte) > 0) THEN
+			UPDATE Puntuacion SET Puntuacion.Deporte = REF(NuevoDep) WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			RETURN 'La puntuación se ha actualizado con éxito.';
+		ELSE
+			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
+		END IF;
+	END set_Deporte;
+	
+	FUNCTION set_Valor(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Deporte%ROWTYPE,
+		Valor IN Puntuacion.Valor%TYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Participante, Deporte) > 0) THEN
+			UPDATE Puntuacion SET Puntuacion.Valor = Valor WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			RETURN 'La puntuación se ha actualizado con éxito.';
+		ELSE
+			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
+		END IF;
+	END set_Valor;
+	
+	/*DELETE*/
+	FUNCTION eliminar(
+		Participante IN T_Participante%ROWTYPE,
+		Deporte IN T_Participante%ROWTYPE
+	) RETURN VARCHAR2 IS
+	BEGIN
+		IF (aux(Participante, Deporte) > 0) THEN
+			DELETE FROM Puntuacion WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			RETURN 'La puntuación se ha eliminado con éxito.';
+		ELSE
+			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
+		END IF;
+	END eliminar;
+END GestionPuntuacion; 
