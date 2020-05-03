@@ -3,17 +3,23 @@ CREATE TABLE Imagen OF T_Imagen (
 	Descripcion NOT NULL,
 	Recurso NOT NULL,
 	CONSTRAINT PK_Imagen PRIMARY KEY (Id)
+	PCTFREE 20
+	PCTUSED 30
 );
 
 CREATE TABLE Pais OF T_Pais (
 	Nombre NOT NULL,
 	CONSTRAINT PK_Pais PRIMARY KEY (Abreviatura)
+	PCTFREE 10
+	PCTUSED 40
 );
 
 CREATE TABLE Marca OF T_Marca (
 	Nombre NOT NULL,
 	Empresa NOT NULL,
 	CONSTRAINT PK_Marca PRIMARY KEY (Nif)
+	PCTFREE 30
+	PCTUSED 30
 );
 
 CREATE TABLE Deporte OF T_Deporte (
@@ -25,6 +31,8 @@ CREATE TABLE Deporte OF T_Deporte (
 	Participantes NOT NULL,
 	MedallasOk NOT NULL,
 	CONSTRAINT PK_Deporte PRIMARY KEY (Id)
+	PCTFREE 20
+	PCTUSED 40
 );
 
 NESTED TABLE Participantes STORE AS NTParticipantes;
@@ -41,6 +49,8 @@ CREATE TABLE Participante OF T_Participante (
 	Marcas NOT NULL,
 	Origen NOT NULL,
 	CONSTRAINT PK_Participante PRIMARY KEY (Dorsal)
+	PCTFREE 30
+	PCTUSED 40
 );
 
 NESTED TABLE Deportes STORE AS NTDeportes;
@@ -49,6 +59,8 @@ CREATE TABLE Puntuacion OF T_Puntuacion (
 	Valor NOT NULL,
 	Medalla NOT NULL,
 	CONSTRAINT PK_Puntuacion PRIMARY KEY (Participante, Deporte)
+	PCTFREE 50
+	PCTUSED 30
 );
 /* -- ¿INNECESARIO? --
 CREATE TABLE Deporte_Acuatico OF T_Deporte_Acuatico;
