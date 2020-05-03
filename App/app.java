@@ -7,6 +7,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
+import java.sql.*;
+import oracle.jdbc.*;
+import oracle.jdbc.pool.*;
+import oracle.sql.*;
 
 /**
  *
@@ -45,7 +49,7 @@ public class app {
             int tipoGestion;
             do {
                 System.out.println("===== HOLA ADMINISTRADOR =====");
-                System.out.println("Por favor, indicanos quÃ© desea gestionar (introduce el numero de la opcion deseada): ");
+                System.out.println("Por favor, indicanos que desea gestionar (introduce el numero de la opcion deseada): ");
                 System.out.println("1- Deportes");
                 System.out.println("2- Participantes");
                 System.out.println("3- Puntuaciones");
@@ -78,7 +82,7 @@ public class app {
                     gestionaImagenes();
                     break;
             }
-            System.out.println("Â¿Desea seguir operando como admin? (s/n)");
+            System.out.println("¿Desea seguir operando como admin? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
         
@@ -91,7 +95,7 @@ public class app {
             int tipoOperacion;
             do {
                 System.out.println("===== GESTION DE DEPORTES =====");
-                System.out.println("Por favor, indicanos quÃ© desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
                 System.out.println("1- A\u00f1adir un deporte");
                 System.out.println("2- Modificar un deporte");
                 System.out.println("3- Eliminar un deporte");
@@ -103,7 +107,7 @@ public class app {
             } while (tipoOperacion > 3 || tipoOperacion < 1);
             switch (tipoOperacion) {
                 case 1:
-                    aÃ±adeDeporteMenu();
+                    añadeDeporteMenu();
                     break;
                 case 2:
                     modificaDeporteMenu();
@@ -112,34 +116,50 @@ public class app {
                     eliminaDeporteMenu();
                     break;
             }
-            System.out.println("Â¿Desea seguir trabajando con deportes? (s/n)");
+            System.out.println("¿Desea seguir trabajando con deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
     }
     
-    public static void aÃ±adeDeporteMenu() {
+    public static void añadeDeporteMenu() {
         Scanner input = new Scanner(System.in);
         char repetir;
+        boolean fechaOk = true;
+        String nombre;
+        String descripcion;
+        double record;
+        String fecha_ini;
+        int dia_ini, hora_ini, min_ini;
+        String fecha_fin;
+        int dia_fin, hora_fin, min_fin;
+        int tipoDep;
+        double datoNum = 0;
+        String datoText = "";
+            
         do {
-            boolean valido;
-            String nombre;
-            String descripcion;
-            double record;
-            String fecha_ini;
-            int dia_ini, hora_ini, min_ini;
-            String fecha_fin;
-            int dia_fin, hora_fin, min_fin;
+            System.out.println("===== A\u00f1ADIENDO UN DEPORTE =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre el deporte que desea registrar: ");
+            
             do {
-                System.out.println("===== A\u00f1ADIENDO UN DEPORTE =====");
-                System.out.println("Por favor, introduce los siguientes datos sobre el deporte que desea registrar: ");
-                System.out.print("- Nombre: ");
+            	System.out.print("- Nombre: ");
                 nombre = input.nextLine();
+                if (nombre == "")
+                	System.out.println("Es obligatorio introducir un nombre.");
+            } while (nombre == "");
+           
+            do {
                 System.out.print("\n- Descripcion: ");
                 descripcion = input.nextLine();
-                System.out.print("\n- Record mundial: ");
-                record = input.nextDouble();
-                input.nextLine();
-                do {
+                if (descripcion == "")
+                	System.out.println("Es obligatorio introducir una descripcion.");
+            } while (descripcion == "");
+            
+            System.out.print("\n- Record mundial: ");
+            record = input.nextDouble();
+            input.nextLine();
+            
+            do {
+	            do {
                     System.out.print("\n- Dia de comienzo (Entre el 22 de julio y el 9 de agosto): ");
                     dia_ini = input.nextInt();
                     input.nextLine();
@@ -184,14 +204,57 @@ public class app {
                 
                 fecha_ini = formatoFecha(dia_ini, hora_ini, min_ini);
                 fecha_fin = formatoFecha(dia_fin, hora_fin, min_fin);
-                valido = validaAÃ±adeDeporte(nombre, descripcion, record, fecha_ini, fecha_fin);
-                if(!valido)
-                    System.out.println("La informacion introducida no es valida en su totalidad. Por favor, reviselo e introduzca los datos de nuevo.\n");
-            } while (valido == false);
+                try {
+                    Date ini = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini.substring(0, 16));
+                    Date fin = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini.substring(0, 16));
+                    fechaOk = ini.after(fin);
+                } catch (ParseException e){}
+                if (!fechaOk)
+                	System.out.println("Ha introducido una fecha de finalizacion anterior a la de inicio.");
+            } while (!fechaOk);
             
-            aÃ±adeDeporte(nombre, descripcion, record, fecha_ini, fecha_fin);
+            do {
+                System.out.print("\n- Tipo de deporte: \n");
+                System.out.println("    1- Acuatico");
+                System.out.println("    2- De velocidad");
+                System.out.println("    3- De pelota");
+                System.out.println("    4- De fuerza");
+                System.out.println("    5- De combate");
+                tipoDep = input.nextInt();
+                input.nextLine();
+                if (tipoDep < 1 || tipoDep > 5)
+                    System.out.println("\nOpcion no valida. Por favor, introduce un valor entre 1 y 5.");
+            } while (tipoDep < 1 || tipoDep > 5);
+            switch (tipoDep) {
+                case 1:
+                	System.out.print("\n- Herramienta o utensilio principal: ");
+                    datoText = input.nextLine();
+                    System.out.println("");
+                    break;
+                case 2:
+                	System.out.print("\n- Distancia: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 3:
+                	System.out.print("\n- Diametro de la pelota: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 4:
+                	System.out.print("\n- Peso de la herramienta: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 5:
+                	System.out.print("\n- Herramienta o utensilio principal: ");
+                    datoText = input.nextLine();
+                    System.out.println("");
+            }
             
-            System.out.println("Â¿Desea introducir mas deportes? (s/n)");
+            añadeDeporte(nombre, descripcion, record, fecha_ini, fecha_fin, tipoDep, datoNum, datoText);
+            
+            System.out.println("\n¿Desea introducir mas deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
     }
@@ -206,27 +269,218 @@ public class app {
         return result;
     }
     
-    public static boolean validaAÃ±adeDeporte(String nombre, String descripcion, double record, String fecha_ini, String fecha_fin) {
-        if(nombre.trim().equals("") || descripcion.trim().equals(""))
-            return false;
-        if(record < 0)
-            return false;
-        try {
-            Date ini = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini.substring(0, 16));
-            Date fin = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini.substring(0, 16));
-            if (ini.after(fin))
-                return false;
-        } catch (ParseException e){}
-        
-        return true;
-    }
-    
-    public static void aÃ±adeDeporte(String nombre, String descripcion, double record, String fecha_ini, String fecha_fin) {
-        
+    public static void añadeDeporte(String nombre, String descripcion, double record, String fecha_ini, String fecha_fin, int tipoDep, double datoNum, String datoText) {
+        String tipo = "";
+    	switch (tipoDep) {
+	    	case 1: tipo = "Acuatico"; break;
+	    	case 2: tipo = "Velocidad"; break;
+	    	case 3: tipo = "Pelota"; break;
+	    	case 4: tipo = "Fuerza"; break;
+	    	case 5: tipo = "Combate";
+        }
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.insertar(?,?,?,?,?,?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nombre);
+        	cs.setString(3, descripcion);
+        	cs.setDouble(4, record);
+        	cs.setString(5, fecha_ini);
+        	cs.setString(6, fecha_fin);
+        	cs.setString(7, tipo);
+        	cs.setString(8, datoText);
+        	cs.setDouble(9, datoNum);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void modificaDeporteMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        int id;
+        String nombre = "";
+        String descripcion = "";
+        double record = 0;
+        String fecha_ini = "";
+        int dia_ini, hora_ini, min_ini;
+        String fecha_fin = "";
+        int dia_fin, hora_fin, min_fin;
+        int tipoDep = 0;
+        double datoNum = 0;
+        String datoText = "";
+        int aModificar;
         
+        do {
+            System.out.println("===== MODIFICANDO UN DEPORTE =====");
+            do {
+            	System.out.print("Introduce el ID del deporte que desea modificar: ");
+            	id = input.nextInt();
+                input.nextLine();
+                if (id < 0)
+                	System.out.println("El ID no puede ser negativo.\n");
+            } while (id < 0);
+            
+            do {
+                System.out.println("Indique a continuacion la opcion que desea modificar del deporte indicado: ");
+                System.out.println("1- Nombre");
+                System.out.println("2- Descripcion");
+                System.out.println("3- Record");
+                System.out.println("4- Fecha de inicio");
+                System.out.println("5- Fecha de finalizacion");
+                System.out.println("6- Tipo de deporte");
+                System.out.println("7- Caracteristica del deporte");
+                aModificar = input.nextInt();
+                input.nextLine();
+                if (aModificar < 1 || aModificar > 7)
+                	System.out.println("Opcion no valida. Por favor, introduce un valor entre 1 y 7.");
+            } while (aModificar < 1 || aModificar > 7);
+            switch (aModificar) {
+            case 1:
+            	String nombreAct = consultaDeporteNombre(id);
+            	do {
+            		System.out.print("\nIntroduce el nuevo nombre del deporte (nombre anterior: " + nombreAct + "): ");
+            		nombre = input.nextLine();
+            		if (nombre == "")
+            			System.out.println("Es obligatorio introducir un nombre.");
+            	} while (nombre == "");
+            	break;
+            	
+            case 2:
+            	String descripcionAct = consultaDeporteDescripcion(id);
+            	do {
+            		System.out.print("\nIntroduce la nueva descripcion del deporte (descripcion anterior: " + descripcionAct + "): ");
+            		descripcion = input.nextLine();
+            		if (descripcion == "")
+            			System.out.println("Es obligatorio introducir una descripcion.");
+            	} while (descripcion == "");
+            	break;
+            	
+            case 3:
+            	
+            	break;
+            	
+            case 4:
+            	
+            	break;
+            	
+            case 5:
+            	
+            	break;
+            	
+            case 6:
+            	
+            	break;
+            	
+            case 7:
+            	
+            }
+            
+            modificaDeporte(id, aModificar, nombre, descripcion, record, fecha_ini, fecha_fin, tipoDep, datoNum, datoText);
+        	
+            System.out.print("\n- Descripcion: ");
+            descripcion = input.nextLine();
+            System.out.print("\n- Record mundial: ");
+            record = input.nextDouble();
+            input.nextLine();
+            do {
+                System.out.print("\n- Dia de comienzo (Entre el 22 de julio y el 9 de agosto): ");
+                dia_ini = input.nextInt();
+                input.nextLine();
+                if (dia_ini > 9 && dia_ini < 22 || dia_ini < 0 || dia_ini > 31)
+                    System.out.println("Dia no valido. Por favor, introduce un dia del mes entre las fechas indicadas.");
+            } while (dia_ini > 9 && dia_ini < 22 || dia_ini < 0 || dia_ini > 31);
+            do {
+                System.out.print("\n- Hora de comienzo (Entre las 9AM y las 3AM): ");
+                hora_ini = input.nextInt();
+                input.nextLine();
+                if (hora_ini < 9 && hora_ini > 3 || hora_ini < 0 || hora_ini > 23)
+                    System.out.println("Hora no valida. Por favor, introduce una hora (sin minutos) en el intervalo indicado.");
+            } while (hora_ini < 9 && hora_ini > 3 || hora_ini < 0 || hora_ini > 23);
+            do {
+                System.out.print("\n- Minutos de comienzo (Desde 0 hasta 59): ");
+                min_ini = input.nextInt();
+                input.nextLine();
+                if (min_ini < 0 || min_ini > 59)
+                    System.out.println("Minutos no validos. Por favor, introduce un valor de minutos valido (0-59).");
+            } while (min_ini < 0 || min_ini > 59);
+            do {
+                System.out.print("\n- Dia de finalizacion (Entre el 22 de julio y el 9 de agosto): ");
+                dia_fin = input.nextInt();
+                input.nextLine();
+                if (dia_fin > 9 && dia_fin < 22 || dia_fin < 0 || dia_fin > 31)
+                    System.out.println("Dia no valido. Por favor, introduce un dia del mes entre las fechas indicadas.");
+            } while (dia_fin > 9 && dia_fin < 22 || dia_fin < 0 || dia_fin > 31);
+            do {
+                System.out.print("\n- Hora de finalizacion (Entre las 9AM y las 3AM): ");
+                hora_fin = input.nextInt();
+                input.nextLine();
+                if (hora_fin < 9 && hora_fin > 3 || hora_fin < 0 || hora_fin > 23)
+                    System.out.println("Hora no valida. Por favor, introduce una hora (sin minutos) en el intervalo indicado.");
+            } while (hora_fin < 9 && hora_fin > 3 || hora_fin < 0 || hora_fin > 23);
+            do {
+                System.out.print("\n- Minutos de finalizacion (Desde 0 hasta 59): ");
+                min_fin = input.nextInt();
+                input.nextLine();
+                if (min_fin < 0 || min_fin > 59)
+                    System.out.println("Minutos no validos. Por favor, introduce un valor de minutos valido (0-59).");
+            } while (min_fin < 0 || min_fin > 59);
+            do {
+                System.out.print("\n- Tipo de deporte: \n");
+                System.out.println("    1- Acuatico");
+                System.out.println("    2- De velocidad");
+                System.out.println("    3- De pelota");
+                System.out.println("    4- De fuerza");
+                System.out.println("    5- De combate");
+                tipoDep = input.nextInt();
+                input.nextLine();
+                if (tipoDep < 1 || tipoDep > 5)
+                    System.out.println("\nOpcion no valida. Por favor, introduce un valor entre 1 y 5.");
+            } while (tipoDep < 1 || tipoDep > 5);
+            switch (tipoDep) {
+                case 1:
+                	System.out.print("\n- Herramienta o utensilio principal: ");
+                    datoText = input.nextLine();
+                    System.out.println("");
+                    break;
+                case 2:
+                	System.out.print("\n- Distancia: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 3:
+                	System.out.print("\n- Diametro de la pelota: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 4:
+                	System.out.print("\n- Peso de la herramienta: ");
+                    datoNum = input.nextDouble();
+                    input.nextLine();
+                	break;
+                case 5:
+                	System.out.print("\n- Herramienta o utensilio principal: ");
+                    datoText = input.nextLine();
+                    System.out.println("");
+            }
+            
+            fecha_ini = formatoFecha(dia_ini, hora_ini, min_ini);
+            fecha_fin = formatoFecha(dia_fin, hora_fin, min_fin);
+            System.out.println("\n¿Desea seguir modificando deportes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+        
+    }
+    
+    public static String modificaDeporte(int id, int aModificar, String nombre, String descripcion, double record, String fecha_ini, String fecha_fin, int tipoDep, double datoNum, String datoText) {
+    	
     }
     
     public static void eliminaDeporteMenu() {
@@ -283,6 +537,11 @@ public class app {
             System.out.println("Â¿Desea seguir operando como usuario? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static String consultaDeporteNombre(int id) {
+    	String result = "";
+    	return result;
     }
     
 }

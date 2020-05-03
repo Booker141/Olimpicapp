@@ -79,6 +79,6 @@ CREATE OR REPLACE TYPE T_Deporte_Fuerza UNDER T_Deporte (
 );
 
 CREATE OR REPLACE TYPE T_Deporte_Combate UNDER T_Deporte (
-	GrupoEdad VARCHAR2(8)
+	Herramienta VARCHAR2(8)
 );
 /
