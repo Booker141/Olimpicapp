@@ -305,11 +305,8 @@ public class app {
     public static void modificaDeporteMenu() {
     	Scanner input = new Scanner(System.in);
         char repetir;
-        int id, dia_ini, hora_ini, min_ini, dia_fin, hora_fin, min_fin, tipoDep, aModificar;
-        String nombre, descripcion, fecha_ini, fecha_fin, datoText;
-        double record, datoNum;
-        
         do {
+        	int id;
             System.out.println("===== MODIFICANDO UN DEPORTE =====");
             do {
             	System.out.print("Introduce el ID del deporte que desea modificar: ");
@@ -319,6 +316,13 @@ public class app {
                 	System.out.println("El ID no puede ser negativo.\n");
             } while (id < 0);
             
+            if (!existeId(id)) {
+            	System.out.println("El ID indicado no esta asociado a ningun deporte. Volviendo al menu anterior...");
+            	gestionaDeportes();
+            	return;
+            }
+            
+            int aModificar;
             do {
                 System.out.println("Indique a continuacion la opcion que desea modificar del deporte indicado: ");
                 System.out.println("1- Nombre");
@@ -336,6 +340,7 @@ public class app {
             switch (aModificar) {
             case 1:
             	String nombreAct = consultaDeporteNombre(id);
+            	String nombre;
             	do {
             		System.out.print("\nIntroduce el nuevo nombre del deporte (nombre anterior: " + nombreAct + "): ");
             		nombre = input.nextLine();
@@ -347,6 +352,7 @@ public class app {
             	
             case 2:
             	String descripcionAct = consultaDeporteDescripcion(id);
+            	String descripcion;
             	do {
             		System.out.print("\nIntroduce la nueva descripcion del deporte (descripcion anterior: " + descripcionAct + "): ");
             		descripcion = input.nextLine();
@@ -358,6 +364,7 @@ public class app {
             	
             case 3:
             	double recordAct = consultaDeporteRecord(id);
+            	double record;
             	do {
             		System.out.print("\nIntroduce el nuevo record del deporte (record anterior: " + recordAct + "): ");
             		record = input.nextDouble();
@@ -371,6 +378,8 @@ public class app {
             case 4:
             	String fechaIniAct = consultaDeporteFechaIni(id);
             	String fechaFinAct = consultaDeporteFechaFin(id);
+            	int dia_ini, hora_ini, min_ini;
+            	String fecha_ini;
             	boolean fechaOk = false;
             	do {
             		do {
@@ -410,6 +419,8 @@ public class app {
             case 5:
             	String fechaIniAct1 = consultaDeporteFechaIni(id);
             	String fechaFinAct1 = consultaDeporteFechaFin(id);
+            	int dia_fin, hora_fin, min_fin;
+            	String fecha_fin;
             	boolean fechaOk1 = false;
             	do {
             		do {
@@ -448,6 +459,9 @@ public class app {
             	
             case 6:
             	String tipoDepAct = consultaDeporteTipo(id);
+            	int tipoDep;
+            	String datoText;
+            	double datoNum;
             	do {
                     System.out.print("\n- Selecciona la nueva categoria a la que pertenece el deporte indicado (Actualmente es de tipo " + tipoDepAct + "): \n");
                     System.out.println("    1- Acuatico");
@@ -506,53 +520,55 @@ public class app {
             	break;
             	
             case 7:
-            	String tipoDepAct = consultaDeporteTipo(id);
-	            if (tipoDepAct.equals("Acuatico")) {
+            	String tipoDepAct1 = consultaDeporteTipo(id);
+            	String datoText1;
+            	double datoNum1;
+	            if (tipoDepAct1.equals("Acuatico")) {
 	            	String datoTextAct = consultaDeporteAdicionalText(id);
 	            	System.out.print("\n- Herramienta o utensilio principal (Actualmente es " + datoTextAct + "): ");
-                    datoText = input.nextLine();
+                    datoText1 = input.nextLine();
                     System.out.println("");
-                    modificaDeporteAdicional(id, datoText);
+                    modificaDeporteAdicional(id, datoText1);
 	            }
-	            if (tipoDepAct.equals("Velocidad")) {
+	            else if (tipoDepAct1.equals("Velocidad")) {
 	            	do {
 	            		double datoNumAct = consultaDeporteAdicionalNum(id);
 	            		System.out.print("\n- Distancia (Actualmente es " + datoNumAct + "): ");
-	            		datoNum = input.nextDouble();
+	            		datoNum1 = input.nextDouble();
 	            		input.nextLine();
-	            		if (datoNum < 0)
+	            		if (datoNum1 < 0)
 	            			System.out.println("La distancia no puede ser negativa.");
-	            	} while (datoNum < 0);
-	            	modificaDeporteAdicional(id, datoNum);
+	            	} while (datoNum1 < 0);
+	            	modificaDeporteAdicional(id, datoNum1);
 	            }
-	            if (tipoDepAct.equals("Pelota")) {
+	            else if (tipoDepAct1.equals("Pelota")) {
 	            	do {
 	            		double datoNumAct = consultaDeporteAdicionalNum(id);
 	            		System.out.print("\n- Diametro de la pelota (Actualmente es " + datoNumAct + "): ");
-	            		datoNum = input.nextDouble();
+	            		datoNum1 = input.nextDouble();
 	            		input.nextLine();
-	            		if (datoNum < 0)
+	            		if (datoNum1 < 0)
 	            			System.out.println("El diametro no puede ser negativo.");
-	            	} while (datoNum < 0);
-	            	modificaDeporteAdicional(id, datoNum);
+	            	} while (datoNum1 < 0);
+	            	modificaDeporteAdicional(id, datoNum1);
 	            }
-	            if (tipoDepAct.equals("Fuerza")) {
+	            else if (tipoDepAct1.equals("Fuerza")) {
 	            	do {
 	            		double datoNumAct = consultaDeporteAdicionalNum(id);
 	            		System.out.print("\n- Peso de la herramienta (Actualmente es " + datoNumAct + "): ");
-	            		datoNum = input.nextDouble();
+	            		datoNum1 = input.nextDouble();
 	            		input.nextLine();
-	            		if (datoNum < 0)
+	            		if (datoNum1 < 0)
 	            			System.out.println("El peso no puede ser negativo.");
-	            	} while (datoNum < 0);
-	            	modificaDeporteAdicional(id, datoNum);
+	            	} while (datoNum1 < 0);
+	            	modificaDeporteAdicional(id, datoNum1);
 	            }
-	            if (tipoDepAct.equals("Combate")) {
+	            else if (tipoDepAct1.equals("Combate")) {
 	            	String datoTextAct = consultaDeporteAdicionalText(id);
 	            	System.out.print("\n- Herramienta o utensilio principal (Actualmente es " + datoTextAct + "): ");
-                    datoText = input.nextLine();
+                    datoText1 = input.nextLine();
                     System.out.println("");
-                    modificaDeporteAdicional(id, datoText);
+                    modificaDeporteAdicional(id, datoText1);
 	            }
             }
             
@@ -562,12 +578,434 @@ public class app {
         
     }
     
-    public static String modificaDeporte(int id, int aModificar, String nombre, String descripcion, double record, String fecha_ini, String fecha_fin, int tipoDep, double datoNum, String datoText) {
+    public static boolean existeId(int id) {
+    	int count = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) total FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	count = rs.getInt("total");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return count == 1;
+    }
+    
+    public static void modificaDeporteNombre(int id, String nombre) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Name(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, nombre);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteDescripcion(int id, String descripcion) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Descripcion(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, descripcion);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteRecord(int id, double record) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Record(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDouble(3, record);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteFechaIni(int id, String fecha_ini) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_FechaIni(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDate(3, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini));
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteFechaFin(int id, String fecha_fin) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_FechaFin(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDate(3, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_fin));
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteTipo(int id, int tipoDep, String datoText) {
+    	String tipo = "";
+    	switch(tipoDep) {
+	    	case 1: tipo = "Acuatico"; break;
+	    	case 2: tipo = "Velocidad"; break;
+	    	case 3: tipo = "Pelota"; break;
+	    	case 4: tipo = "Fuerza"; break;
+	    	case 5: tipo = "Combate"; break;
+    	}
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Tipo(?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, tipo);
+        	cs.setString(4, datoText);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteTipo(int id, int tipoDep, double datoNum) {
+    	String tipo = "";
+    	switch(tipoDep) {
+	    	case 1: tipo = "Acuatico"; break;
+	    	case 2: tipo = "Velocidad"; break;
+	    	case 3: tipo = "Pelota"; break;
+	    	case 4: tipo = "Fuerza"; break;
+	    	case 5: tipo = "Combate"; break;
+    	}
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Tipo2(?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, tipo);
+        	cs.setDouble(4, datoNum);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteAdicional(int id, String datoText) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Adicional(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, datoText);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaDeporteAdicional(int id, double datoNum) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_Adicional2(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDouble(3, datoNum);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static String consultaDeporteNombre(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Nombre");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaDeporteDescripcion(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Descripcion FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Descripcion");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static double consultaDeporteRecord(int id) {
+    	double result = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Record FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDouble("Record");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaDeporteFechaIni(int id) {
+    	Date result = new Date();
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Fecha_Ini FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDate("Fecha_Ini");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	String resultString = result.toString();
+    	String finalResult = resultString.substring(8, 10);
+    	if (resultString.substring(4, 7).equals("JUL"))
+    		finalResult += "-07-2021 ";
+    	else
+    		finalResult += "-08-2021 ";
+    	finalResult += resultString.substring(11, 16);
     	
+    	return finalResult;
+    }
+    
+    public static String consultaDeporteFechaFin(int id) {
+    	Date result = new Date();
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Fecha_Fin FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDate("Fecha_Fin");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	String resultString = result.toString();
+    	String finalResult = resultString.substring(8, 10);
+    	if (resultString.substring(4, 7).equals("JUL"))
+    		finalResult += "-07-2021 ";
+    	else
+    		finalResult += "-08-2021 ";
+    	finalResult += resultString.substring(11, 16);
+    	
+    	return finalResult;
+    }
+    
+    public static String consultaDeporteTipo(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	/*
+        	 * PENDIENTE
+        	 */
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT TREAT(VALUE(d) AS T_Deporte_ FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Descripcion");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaDeporteAdicionalText(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	/*
+        	 * PENDIENTE
+        	 */
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Descripcion");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static double consultaDeporteAdicionalNum(int id) {
+    	double result = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	/*
+        	 * PENDIENTE
+        	 */
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDouble("Descripcion");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
     }
     
     public static void eliminaDeporteMenu() {
-        
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int id;
+            System.out.println("===== ELIMINANDO UN DEPORTE =====");
+            do {
+            	System.out.print("Introduce el ID del deporte que desea eliminar: ");
+            	id = input.nextInt();
+                input.nextLine();
+                if (id < 0)
+                	System.out.println("El ID no puede ser negativo.\n");
+            } while (id < 0);
+            
+            eliminaDeporte(id);
+            
+            System.out.println("\n¿Desea seguir eliminando deportes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaDeporte(int id) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.eliminar(?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void gestionaParticipantes() {
@@ -620,11 +1058,6 @@ public class app {
             System.out.println("Â¿Desea seguir operando como usuario? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-    }
-    
-    public static String consultaDeporteNombre(int id) {
-    	String result = "";
-    	return result;
     }
     
 }
