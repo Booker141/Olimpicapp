@@ -51,7 +51,7 @@ CREATE OR REPLACE TYPE T_Deporte AS OBJECT (
 	Fecha_Fin DATETIME,
 	Participantes T_Participa,
 	MedallasOk BOOLEAN
-);
+) NOT FINAL;
 
 CREATE OR REPLACE TYPE T_Compite_en AS TABLE OF REF T_Deporte;
 

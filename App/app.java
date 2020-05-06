@@ -5,6 +5,9 @@
  */
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 import java.sql.*;
@@ -1009,7 +1012,240 @@ public class app {
     }
     
     public static void gestionaParticipantes() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+            int tipoOperacion;
+            do {
+                System.out.println("===== GESTION DE PARTICIPANTES =====");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("1- A\u00f1adir un participante");
+                System.out.println("2- Modificar un participante");
+                System.out.println("3- Eliminar un participante");
+                tipoOperacion = input.nextInt();
+                input.nextLine();
+                System.out.println("\n");
+                if(tipoOperacion > 3 || tipoOperacion < 1)
+                    System.out.println("La operacion introducida no es valida. Las opciones permitidas van del 1 al 3.\n");
+            } while (tipoOperacion > 3 || tipoOperacion < 1);
+            switch (tipoOperacion) {
+                case 1:
+                    añadeParticipanteMenu();
+                    break;
+                case 2:
+                    modificaParticipanteMenu();
+                    break;
+                case 3:
+                    eliminaParticipanteMenu();
+                    break;
+            }
+            System.out.println("¿Desea seguir trabajando con participantes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void añadeParticipanteMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir, genero;
+        String nombre, apellidos, fecha_nac, pais;
+        int dia_nac, mes_nac, año_nac;
+        double peso, altura;
+        ArrayList<Integer> deportes = new ArrayList<>();
+        ArrayList<String> marcas = new ArrayList<>();
+        boolean fechaOk, paisOk, deporteOk, marcaOk;
         
+        do {
+            System.out.println("===== A\u00f1ADIENDO UN PARTICIPANTE =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre el participante que desea registrar: ");
+            
+            do {
+            	System.out.print("- Nombre: ");
+                nombre = input.nextLine();
+                if (nombre == "")
+                	System.out.println("Es obligatorio introducir un nombre.");
+            } while (nombre == "");
+           
+            do {
+                System.out.print("\n- Apellidos: ");
+                apellidos = input.nextLine();
+                if (apellidos == "")
+                	System.out.println("Es obligatorio introducir el/los apellidos.");
+            } while (apellidos == "");
+            
+            do {
+	            do {
+		            System.out.print("\n- Dia de nacimiento: ");
+		            dia_nac = input.nextInt();
+		            input.nextLine();
+		            if (dia_nac < 1 || dia_nac > 31)
+		            	System.out.println("Ha introducido un valor para el dia de nacimiento sin coherencia. Introduzca un numero entre 1 y 31.");
+	            } while (dia_nac < 1 || dia_nac > 31);
+	            do {
+	            	System.out.print("\n- Mes de nacimiento: ");
+	            	mes_nac = input.nextInt();
+	            	input.nextLine();
+	            	if (mes_nac < 1 || mes_nac > 12)
+	            		System.out.println("Ha introducido un valor para el mes de nacimiento sin coherencia. Introduce un numero entre 1 y 12.");
+	            } while (mes_nac < 1 || mes_nac > 12);
+	            do {
+	            	System.out.print("\n- Año de nacimiento: ");
+	            	año_nac = input.nextInt();
+	            	input.nextLine();
+	            	if (año_nac < 1910 || año_nac > 2015)
+	            		System.out.println("Ha introducido un valor para el año de nacimiento no valido. La persona es demasiado joven o anciana.");
+	            } while (año_nac < 1910 || año_nac > 2015);
+            	fecha_nac = construyeFechaNac(dia_nac, mes_nac, año_nac);
+            	if (fecha_nac == null)
+            		System.out.println("La fecha de nacimiento introducida no es valida. Verifiquela e introduzcala de nuevo.");
+            } while (fecha_nac == null);
+            
+            do {
+	            System.out.print("\n- Genero ((H)ombre/(M)ujer/(O)tro): ");
+	            genero = input.next().charAt(0);
+	            if (genero != 'H' && genero != 'M' && genero != 'O')
+	            	System.out.println("Ha introducido un genero erroneo. Limitese a los valores indicados (una unica letra).");
+            } while (genero != 'H' && genero != 'M' && genero != 'O');
+            
+            do {
+            	System.out.print("\n- Peso: ");
+                peso = input.nextDouble();
+                input.nextLine();
+                if (peso < 0)
+                	System.out.println("El peso no puede ser negativo.");
+            } while (peso < 0);
+            
+            do {
+            	System.out.print("\n- Altura: ");
+                altura = input.nextDouble();
+                input.nextLine();
+                if (altura < 0)
+                	System.out.println("La altura no puede ser negativa.");
+            } while (altura < 0);
+            
+            do {
+                System.out.print("\n- Pais al que representa: \n");
+                pais = input.nextLine();
+                paisOk = compruebaPais(pais);
+                if (!paisOk)
+                    System.out.println("\nNo se encuentra el pais indicado.");
+            } while (!paisOk);
+            
+            char masDeportes;
+            int idDep;
+            do {
+            	do {
+            		System.out.print("\n- ID de un deporte en el que participa: ");
+            		idDep = input.nextInt();
+            		input.nextLine();
+            		deporteOk = compruebaDeporte(idDep);
+            		if (!deporteOk)
+            			System.out.println("El deporte indicado no existe.");
+            	} while (!deporteOk);
+            	deportes.add(idDep);
+            	System.out.print("\n¿Desea apuntar al participante en otro deporte? (s/n): ");
+            	masDeportes = input.next().charAt(0);
+            } while (masDeportes == 's' || masDeportes == 'S');
+            
+            char masMarcas;
+            String nifMarca;
+            do {
+            	do {
+            		System.out.print("\n- NIF de una marca que le patrocina: ");
+            		nifMarca = input.nextLine();
+            		marcaOk = compruebaMarca(nifMarca);
+            		if (!marcaOk)
+            			System.out.println("La marca indicada no existe.");
+            	} while (!marcaOk);
+            	marcas.add(nifMarca);
+            	System.out.print("\n¿Desea asociar otra marca al participante? (s/n): ");
+            	masMarcas = input.next().charAt(0);
+            } while (masMarcas == 's' || masMarcas == 'S');
+            
+            añadeParticipante(nombre, apellidos, fecha_nac, genero, peso, altura, pais, deportes, marcas);
+            
+            System.out.println("\n¿Desea introducir mas deportes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static String construyeFechaNac(int dia, int mes, int año) {
+    	try {
+    		LocalDate fechaNac = LocalDate.of(año, mes, dia);
+    		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    		return formatter.format(fechaNac);
+    	} catch (Exception e) { return null; }
+    }
+    
+    public static boolean compruebaPais(String nombre) {
+    	int aux = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Pais WHERE Nombre = ?");
+        	pstmt.setString(1, nombre);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	aux = rs.getInt("cont");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return (aux == 0) ? false : true;
+    }
+    
+    public static boolean compruebaDeporte(int id) {
+    	int aux = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Deporte WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	aux = rs.getInt("cont");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return (aux == 0) ? false : true;
+    }
+    
+    public static boolean compruebaMarca(String nif) {
+    	int aux = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Marca WHERE Nif = ?");
+        	pstmt.setString(1, nif);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	aux = rs.getInt("cont");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return (aux == 0) ? false : true;
+    }
+    
+    public static void añadeParticipante(String nombre, String apellidos, String fecha_nac, char genero, double peso, double altura, String pais, ArrayList<Integer> deportes, ArrayList<String> marcas) {
+    	
+    }
+    
+    public static void modificaParticipanteMenu() {
+    	
+    }
+    
+    public static void eliminaParticipanteMenu() {
+    	
     }
     
     public static void gestionaPuntuaciones() {
@@ -1035,7 +1271,7 @@ public class app {
             int tipoConsulta;
             do {
                 System.out.println("===== HOLA USUARIO =====");
-                System.out.println("Por favor, indicanos quÃ© desea consultar (introduce el numero de la opcion deseada): ");
+                System.out.println("Por favor, indicanos que desea consultar (introduce el numero de la opcion deseada): ");
                 System.out.println("1- Deportes");
                 System.out.println("2- Participantes");
                 System.out.println("3- Medallas");
@@ -1055,7 +1291,7 @@ public class app {
                 case 4:
                     break;
             }
-            System.out.println("Â¿Desea seguir operando como usuario? (s/n)");
+            System.out.println("¿Desea seguir operando como usuario? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
     }
