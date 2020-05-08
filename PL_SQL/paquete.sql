@@ -300,7 +300,7 @@ CREATE OR REPLACE PACKAGE GestionParticipantes AS
 		Genero IN Participante.Genero%TYPE,
 		Peso IN Participante.Peso%TYPE,
 		Altura IN Participante.Altura%TYPE,
-		Origen IN Pais.Abreviatura%TYPE,
+		Origen IN Pais.Nombre%TYPE,
 		Deportes IN T_Compite_en%TYPE,
 		Marcas IN T_Patrocinado_por%TYPE
 	) RETURN VARCHAR2;
@@ -339,7 +339,7 @@ CREATE OR REPLACE PACKAGE BODY GestionParticipantes AS
 		Genero IN Participante.Genero%TYPE,
 		Peso IN Participante.Peso%TYPE,
 		Altura IN Participante.Altura%TYPE,
-		Origen IN Pais.Abreviatura%TYPE,
+		Origen IN REF T_Pais,
 		Deportes IN T_Compite_en%TYPE,
 		Marcas IN T_Patrocinado_por%TYPE
 	) IS RETURN VARCHAR2

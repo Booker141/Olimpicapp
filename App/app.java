@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.Vector;
 import java.sql.*;
 import oracle.jdbc.*;
 import oracle.jdbc.pool.*;
@@ -282,6 +283,11 @@ public class app {
 	    	case 5: tipo = "Combate";
         }
     	try {
+    		Date inicioDate = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini);
+	    	Date finDate = new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_fin);
+	    	Timestamp inicioTS = new Timestamp(inicioDate.getTime());
+	    	Timestamp finTS = new Timestamp(finDate.getTime());
+	    	
         	OracleDataSource ods = new OracleDataSource();
         	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
         	ods.setUser("usuario");
@@ -293,8 +299,8 @@ public class app {
         	cs.setString(2, nombre);
         	cs.setString(3, descripcion);
         	cs.setDouble(4, record);
-        	cs.setString(5, fecha_ini);
-        	cs.setString(6, fecha_fin);
+        	cs.setTimestamp(5, inicioTS);
+        	cs.setTimestamp(6, finTS);
         	cs.setString(7, tipo);
         	cs.setString(8, datoText);
         	cs.setDouble(9, datoNum);
@@ -319,7 +325,7 @@ public class app {
                 	System.out.println("El ID no puede ser negativo.\n");
             } while (id < 0);
             
-            if (!existeId(id)) {
+            if (!existeDeporte(id)) {
             	System.out.println("El ID indicado no esta asociado a ningun deporte. Volviendo al menu anterior...");
             	gestionaDeportes();
             	return;
@@ -581,7 +587,7 @@ public class app {
         
     }
     
-    public static boolean existeId(int id) {
+    public static boolean existeDeporte(int id) {
     	int count = 0;
     	try {
         	OracleDataSource ods = new OracleDataSource();
@@ -669,7 +675,7 @@ public class app {
         	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_FechaIni(?,?)}");
         	cs.registerOutParameter(1, Types.VARCHAR);
         	cs.setInt(2, id);
-        	cs.setDate(3, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini));
+        	cs.setTimestamp(3, (java.sql.Timestamp) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_ini));
         	cs.executeUpdate();
         	System.out.println("\n" + cs.getString(1));
         	
@@ -688,7 +694,7 @@ public class app {
         	CallableStatement cs = conn.prepareCall("{? = call GestionDeportes.set_FechaFin(?,?)}");
         	cs.registerOutParameter(1, Types.VARCHAR);
         	cs.setInt(2, id);
-        	cs.setDate(3, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_fin));
+        	cs.setTimestamp(3, (java.sql.Timestamp) new SimpleDateFormat("dd-MM-yyyy HH:mm").parse(fecha_fin));
         	cs.executeUpdate();
         	System.out.println("\n" + cs.getString(1));
         	
@@ -869,11 +875,9 @@ public class app {
         } catch (Exception e) {}
     	String resultString = result.toString();
     	String finalResult = resultString.substring(8, 10);
-    	if (resultString.substring(4, 7).equals("JUL"))
-    		finalResult += "-07-2021 ";
-    	else
-    		finalResult += "-08-2021 ";
-    	finalResult += resultString.substring(11, 16);
+    	finalResult += "-" + resultString.substring(5, 7);
+    	finalResult += "-" + resultString.substring(0, 4);
+    	finalResult += " " + resultString.substring(11, 16);
     	
     	return finalResult;
     }
@@ -897,11 +901,9 @@ public class app {
         } catch (Exception e) {}
     	String resultString = result.toString();
     	String finalResult = resultString.substring(8, 10);
-    	if (resultString.substring(4, 7).equals("JUL"))
-    		finalResult += "-07-2021 ";
-    	else
-    		finalResult += "-08-2021 ";
-    	finalResult += resultString.substring(11, 16);
+    	finalResult += "-" + resultString.substring(5, 7);
+    	finalResult += "-" + resultString.substring(0, 4);
+    	finalResult += " " + resultString.substring(11, 16);
     	
     	return finalResult;
     }
@@ -1050,8 +1052,8 @@ public class app {
         String nombre, apellidos, fecha_nac, pais;
         int dia_nac, mes_nac, año_nac;
         double peso, altura;
-        ArrayList<Integer> deportes = new ArrayList<>();
-        ArrayList<String> marcas = new ArrayList<>();
+        ArrayList<java.sql.Ref> deportes = new ArrayList<>();
+        ArrayList<java.sql.Ref> marcas = new ArrayList<>();
         boolean fechaOk, paisOk, deporteOk, marcaOk;
         
         do {
@@ -1122,10 +1124,11 @@ public class app {
                 	System.out.println("La altura no puede ser negativa.");
             } while (altura < 0);
             
+            java.sql.Ref paisRef = null;
             do {
                 System.out.print("\n- Pais al que representa: \n");
                 pais = input.nextLine();
-                paisOk = compruebaPais(pais);
+                paisOk = compruebaPais(pais, paisRef);
                 if (!paisOk)
                     System.out.println("\nNo se encuentra el pais indicado.");
             } while (!paisOk);
@@ -1137,11 +1140,10 @@ public class app {
             		System.out.print("\n- ID de un deporte en el que participa: ");
             		idDep = input.nextInt();
             		input.nextLine();
-            		deporteOk = compruebaDeporte(idDep);
+            		deporteOk = compruebaDeporte(idDep, deportes);
             		if (!deporteOk)
-            			System.out.println("El deporte indicado no existe.");
+            			System.out.println("El deporte indicado no existe o ya esta incluido.");
             	} while (!deporteOk);
-            	deportes.add(idDep);
             	System.out.print("\n¿Desea apuntar al participante en otro deporte? (s/n): ");
             	masDeportes = input.next().charAt(0);
             } while (masDeportes == 's' || masDeportes == 'S');
@@ -1152,16 +1154,15 @@ public class app {
             	do {
             		System.out.print("\n- NIF de una marca que le patrocina: ");
             		nifMarca = input.nextLine();
-            		marcaOk = compruebaMarca(nifMarca);
+            		marcaOk = compruebaMarca(nifMarca, marcas);
             		if (!marcaOk)
-            			System.out.println("La marca indicada no existe.");
+            			System.out.println("La marca indicada no existe o ya esta incluida.");
             	} while (!marcaOk);
-            	marcas.add(nifMarca);
             	System.out.print("\n¿Desea asociar otra marca al participante? (s/n): ");
             	masMarcas = input.next().charAt(0);
             } while (masMarcas == 's' || masMarcas == 'S');
             
-            añadeParticipante(nombre, apellidos, fecha_nac, genero, peso, altura, pais, deportes, marcas);
+            añadeParticipante(nombre, apellidos, fecha_nac, genero, peso, altura, paisRef, deportes, marcas);
             
             System.out.println("\n¿Desea introducir mas deportes? (s/n)");
             repetir = input.next().charAt(0);
@@ -1176,8 +1177,7 @@ public class app {
     	} catch (Exception e) { return null; }
     }
     
-    public static boolean compruebaPais(String nombre) {
-    	int aux = 0;
+    public static boolean compruebaPais(String nombre, java.sql.Ref refPais) {
     	try {
         	OracleDataSource ods = new OracleDataSource();
         	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
@@ -1185,19 +1185,21 @@ public class app {
         	ods.setPassword("usuario");
         	Connection conn = ods.getConnection();
         	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Pais WHERE Nombre = ?");
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(p) ref FROM Pais p WHERE Nombre = ?");
         	pstmt.setString(1, nombre);
         	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	aux = rs.getInt("cont");
+        	if (!rs.next())
+        		return false;
+        	else
+        		refPais = rs.getRef("ref");
         	
         	conn.close();
-        } catch (Exception e) {}
-    	return (aux == 0) ? false : true;
+        } catch (Exception e) { return false; }
+    	return true;
     }
     
-    public static boolean compruebaDeporte(int id) {
-    	int aux = 0;
+    public static boolean compruebaDeporte(int id, ArrayList<java.sql.Ref> deportes) {
+    	java.sql.Ref aux = null;
     	try {
         	OracleDataSource ods = new OracleDataSource();
         	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
@@ -1205,19 +1207,52 @@ public class app {
         	ods.setPassword("usuario");
         	Connection conn = ods.getConnection();
         	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Deporte WHERE Id = ?");
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(d) ref FROM Deporte d WHERE Id = ?");
         	pstmt.setInt(1, id);
         	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	aux = rs.getInt("cont");
-        	
+        	if (!rs.next())
+        		return false;
+        	else 
+        		aux = rs.getRef("ref");
         	conn.close();
-        } catch (Exception e) {}
-    	return (aux == 0) ? false : true;
+        } catch (Exception e) { return false; }
+    	if(deportes.contains(aux))
+    		return false;
+    	else {
+    		deportes.add(aux);
+    		return true;
+    	}
     }
     
-    public static boolean compruebaMarca(String nif) {
-    	int aux = 0;
+    public static boolean compruebaDeporte1(int id, ArrayList<java.sql.Ref> deportes) {
+    	java.sql.Ref aux = null;
+    	try {
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(d) ref FROM Deporte d WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	if (!rs.next())
+        		return false;
+        	else 
+        		aux = rs.getRef("ref");
+        	conn.close();
+    	} catch (Exception e) { return false; }
+    	if(deportes.contains(aux)) {
+    		int index = deportes.indexOf(aux);
+    		deportes.add(0, aux);
+    		deportes.remove(index+1);
+    		return true;
+    	} else
+    		return false;
+    }
+    
+    public static boolean compruebaMarca(String nif, ArrayList<java.sql.Ref> marcas) {
+    	java.sql.Ref aux = null;
     	try {
         	OracleDataSource ods = new OracleDataSource();
         	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
@@ -1225,31 +1260,889 @@ public class app {
         	ods.setPassword("usuario");
         	Connection conn = ods.getConnection();
         	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) cont FROM Marca WHERE Nif = ?");
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(m) ref FROM Marca m WHERE Nif = ?");
         	pstmt.setString(1, nif);
         	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	aux = rs.getInt("cont");
+        	if (!rs.next())
+        		return false;
+        	else 
+        		aux = rs.getRef("ref");
+        	conn.close();
+        } catch (Exception e) { return false; }
+    	if(marcas.contains(aux))
+    		return false;
+    	else {
+    		marcas.add(aux);
+    		return true;
+    	}
+    }
+    
+    public static boolean compruebaMarca1(String nif, ArrayList<java.sql.Ref> marcas) {
+    	java.sql.Ref aux = null;
+    	try {
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(m) ref FROM Marca m WHERE Nif = ?");
+        	pstmt.setString(1, nif);
+        	ResultSet rs = pstmt.executeQuery();
+        	if (!rs.next())
+        		return false;
+        	else 
+        		aux = rs.getRef("ref");
+        	conn.close();
+    	} catch (Exception e) { return false; }
+    	if(marcas.contains(aux)) {
+    		int index = marcas.indexOf(aux);
+    		marcas.add(0, aux);
+    		marcas.remove(index+1);
+    		return true;
+    	} else
+    		return false;
+    }
+    
+    public static void añadeParticipante(String nombre, String apellidos, String fecha_nac, char genero, double peso, double altura, java.sql.Ref pais, ArrayList<java.sql.Ref> deportes, ArrayList<java.sql.Ref> marcas) {
+    	try {
+    		Date nacimiento = new SimpleDateFormat("dd-MM-yyyy").parse(fecha_nac);
+    		
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.insertar(?,?,?,?,?,?,?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nombre);
+        	cs.setString(3, apellidos);
+        	cs.setDate(4, new java.sql.Date(nacimiento.getTime()));
+        	cs.setString(5, String.valueOf(genero));
+        	cs.setDouble(6, peso);
+        	cs.setDouble(7, altura);
+        	cs.setRef(8, pais);
+        	cs.setArray(9, conn.createArrayOf("REF", deportes.toArray()));
+        	cs.setArray(10, conn.createArrayOf("REF", marcas.toArray()));
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
         	
         	conn.close();
         } catch (Exception e) {}
-    	return (aux == 0) ? false : true;
-    }
-    
-    public static void añadeParticipante(String nombre, String apellidos, String fecha_nac, char genero, double peso, double altura, String pais, ArrayList<Integer> deportes, ArrayList<String> marcas) {
-    	
     }
     
     public static void modificaParticipanteMenu() {
-    	
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int id;
+            System.out.println("===== MODIFICANDO UN PARTICIPANTE =====");
+            do {
+            	System.out.print("Introduce el numero del dorsal del participante que desea modificar: ");
+            	id = input.nextInt();
+                input.nextLine();
+                if (id < 0 || id > 9999)
+                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
+            } while (id < 0 || id > 9999);
+            
+            if (!existeParticipante(id)) {
+            	System.out.println("El dorsal indicado no esta asociado a ningun participante. Volviendo al menu anterior...");
+            	gestionaParticipantes();
+            	return;
+            }
+            
+            int aModificar;
+            do {
+                System.out.println("Indique a continuacion la opcion que desea modificar del participante indicado: ");
+                System.out.println("1- Nombre");
+                System.out.println("2- Apellidos");
+                System.out.println("3- Fecha de nacimiento");
+                System.out.println("4- Genero");
+                System.out.println("5- Peso");
+                System.out.println("6- Altura");
+                System.out.println("7- Pais al que representa");
+                System.out.println("8- A\u00f1adir un deporte en el que participa");
+                System.out.println("9- Eliminar un deporte en el que participa");
+                System.out.println("10- A\u00f1adir una marca que le patrocina");
+                System.out.println("11- Eliminar marca que le patrocina");
+                aModificar = input.nextInt();
+                input.nextLine();
+                if (aModificar < 1 || aModificar > 11)
+                	System.out.println("Opcion no valida. Por favor, introduce un valor entre 1 y 12.");
+            } while (aModificar < 1 || aModificar > 11);
+            switch (aModificar) {
+	            case 1:
+	            	String nombreAct = consultaParticipanteNombre(id);
+	            	String nombre;
+	            	do {
+	            		System.out.print("\nIntroduce el nuevo nombre del participante (nombre anterior: " + nombreAct + "): ");
+	            		nombre = input.nextLine();
+	            		if (nombre == "")
+	            			System.out.println("Es obligatorio introducir un nombre.");
+	            	} while (nombre == "");
+	            	modificaParticipanteNombre(id, nombre);
+	            	break;
+	            case 2:
+	            	String apellidosAct = consultaParticipanteApellidos(id);
+	            	String apellidos;
+	            	do {
+	            		System.out.print("\nIntroduce los apellidos del participante (apellidos anteriores: " + apellidosAct + "): ");
+	            		apellidos = input.nextLine();
+	            		if (apellidos == "")
+	            			System.out.println("Es obligatorio introducir apellidos.");
+	            	} while (apellidos == "");
+	            	modificaParticipanteApellidos(id, apellidos);
+	            	break;
+	            case 3:
+	            	String fechaNacAct = consultaParticipanteNacimiento(id);
+	            	int dia_nac, mes_nac, año_nac;
+	            	String fechaNac;
+	            	boolean fechaOk = false;
+	            	do {
+	            		do {
+	                        System.out.print("\n- Introduce el nuevo dia de nacimiento (Actualmente es el " + fechaNacAct + "): ");
+	                        dia_nac = input.nextInt();
+	                        input.nextLine();
+	                        if (dia_nac < 1 || dia_nac > 31)
+	                            System.out.println("Dia no valido. Por favor, introduce un dia del intervalo (1-31).");
+	                    } while (dia_nac < 1 || dia_nac > 31);
+	                    do {
+	                        System.out.print("\n- Introduce el nuevo mes de nacimiento (Actualmente es el " + fechaNacAct + "): ");
+	                        mes_nac = input.nextInt();
+	                        input.nextLine();
+	                        if (mes_nac < 1 || mes_nac > 12)
+	                            System.out.println("Mes no valido. Por favor, introduce un mes del intervalo (1-12).");
+	                    } while (mes_nac < 1 || mes_nac > 12);
+	                    do {
+	                        System.out.print("\n- Introduce el nuevo a\u00f1o de nacimiento (Actualmente es el " + fechaNacAct + "): ");
+	                        año_nac = input.nextInt();
+	                        input.nextLine();
+	                        if (año_nac < 1920 || año_nac > 2015)
+	                            System.out.println("A\u00f1o no valido. Por favor, introduce un a\u00f1o del intervalo (1910-2015).");
+	                    } while (año_nac < 1920 || año_nac > 2015);
+	                    
+	                    fechaNac = construyeFechaNac(dia_nac, mes_nac, año_nac);
+	                    if (fechaNac == null)
+	                    	System.out.println("Ha introducido una fecha de nacimiento incoherente. Asegurese que la fecha es valida.");
+	            	} while (fechaNac == null);
+	            	modificaParticipanteNacimiento(id, fechaNac);
+	            	break;
+	            case 4:
+	            	char generoAct = consultaParticipanteGenero(id);
+	            	char genero;
+	            	do {
+	            		System.out.print("\nIntroduce el genero del participante (genero actual: " + generoAct + "): ");
+	            		genero = input.next().charAt(0);
+	            		if (genero != 'H' && genero != 'M' && genero != 'O')
+	            			System.out.println("Debe introducir (H)ombre, (M)ujer u (O)tro.");
+	            	} while (genero != 'H' && genero != 'M' && genero != 'O');
+	            	modificaParticipanteGenero(id, genero);
+	            	break;
+	            case 5:
+	            	double pesoAct = consultaParticipantePeso(id);
+	            	double peso;
+	            	do {
+	            		System.out.print("\nIntroduce el nuevo peso del participante (Peso anterior: " + pesoAct + "): ");
+	            		peso = input.nextDouble();
+	            		input.nextLine();
+	            		if (peso < 0)
+	            			System.out.println("El peso no puede ser negativo.");
+	            	} while (peso < 0);
+	            	modificaParticipantePeso(id, peso);
+	            	break;
+	            case 6:
+	            	double alturaAct = consultaParticipanteAltura(id);
+	            	double altura;
+	            	do {
+	            		System.out.print("\nIntroduce la nueva altura del participante (Altura anterior: " + alturaAct + "): ");
+	            		altura = input.nextDouble();
+	            		input.nextLine();
+	            		if (altura < 0)
+	            			System.out.println("La altura no puede ser negativa.");
+	            	} while (altura < 0);
+	            	modificaParticipanteAltura(id, altura);
+	            	break;
+	            case 7:
+	            	String paisAct = consultaParticipantePais(id);
+	            	String pais;
+	            	java.sql.Ref paisRef = null;
+	            	boolean paisOk = false;
+	            	do {
+	                    System.out.print("\nIntroduce el pais al que el participante representa (Actualmente es: " + paisAct + "): ");
+	                    pais = input.nextLine();
+	                    paisOk = compruebaPais(pais, paisRef);
+	                    if (!paisOk)
+	                        System.out.println("\nNo se encuentra el pais indicado.");
+	                } while (!paisOk);
+	            	modificaParticipantePais(id, paisRef);
+	            	break;
+	            case 8:
+	            	int idDep;
+	            	boolean deporteOk = false;
+	            	ArrayList<java.sql.Ref> deportes = consultaParticipanteDeportes(id);
+	            	do {
+	            		System.out.print("\nID de un deporte en el que participa: ");
+	            		idDep = input.nextInt();
+	            		input.nextLine();
+	            		deporteOk = compruebaDeporte(idDep, deportes);
+	            		if (!deporteOk)
+	            			System.out.println("El deporte indicado no existe o ya esta incluido.");
+	            	} while (!deporteOk);
+	            	modificaParticipanteAñadeDeporte(id, deportes.get(deportes.size()-1));
+	            	break;
+	            case 9:
+	            	int idDep1;
+	            	boolean deporteOk1 = false;
+	            	ArrayList<java.sql.Ref> deportes1 = consultaParticipanteDeportes(id);
+	            	do {
+	            		System.out.print("\nID de un deporte en el que participa: ");
+	            		idDep1 = input.nextInt();
+	            		input.nextLine();
+	            		deporteOk1 = compruebaDeporte1(idDep1, deportes1);
+	            		if (!deporteOk1)
+	            			System.out.println("El deporte indicado no existe o el participante no participa en el.");
+	            	} while (!deporteOk1);
+	            	modificaParticipanteEliminaDeporte(id, deportes1.get(0));
+	            	break;
+	            case 10:
+	            	String nifMarca;
+	            	boolean marcaOk = false;
+	            	ArrayList<java.sql.Ref> marcas = consultaParticipanteMarcas(id);
+	            	do {
+	            		System.out.print("\nNIF de una marca que le patrocina: ");
+	            		nifMarca = input.nextLine();
+	            		marcaOk = compruebaMarca(nifMarca, marcas);
+	            		if (!marcaOk)
+	            			System.out.println("La marca indicada no existe o ya esta incluida.");
+	            	} while (!marcaOk);
+	            	modificaParticipanteAñadeMarca(id, marcas.get(marcas.size()-1));
+	            	break;
+	            case 11:
+	            	String nifMarca1;
+	            	boolean marcaOk1 = false;
+	            	ArrayList<java.sql.Ref> marcas1 = consultaParticipanteMarcas(id);
+	            	do {
+	            		System.out.print("\nNIF de una marca que le patrocina: ");
+	            		nifMarca1 = input.nextLine();
+	            		marcaOk1 = compruebaMarca1(nifMarca1, marcas1);
+	            		if (!marcaOk1)
+	            			System.out.println("La marca indicada no existe o no patrocina a este participante.");
+	            	} while (!marcaOk1);
+	            	modificaParticipanteEliminaMarca(id, marcas1.get(0));
+	            	
+            }
+            
+            System.out.println("\n¿Desea seguir modificando participantes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existeParticipante(int id) {
+    	int count = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) total FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	count = rs.getInt("total");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return count == 1;
+    }
+    
+    public static void modificaParticipanteNombre(int id, String nombre) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Nombre(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, nombre);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteApellidos(int id, String apellidos) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Apellidos(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, apellidos);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteNacimiento(int id, String fechaNac) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Nacimiento(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDate(3, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy").parse(fechaNac));
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteGenero(int id, char genero) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Genero(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, String.valueOf(genero));
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipantePeso(int id, double peso) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Peso(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDouble(3, peso);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteAltura(int id, double altura) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Altura(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setDouble(3, altura);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipantePais(int id, java.sql.Ref pais) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.set_Origen(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setRef(3, pais);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteAñadeDeporte(int id, java.sql.Ref deporte) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.add_Deporte(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setRef(3, deporte);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteEliminaDeporte(int id, java.sql.Ref deporte) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.remove_Deporte(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setRef(3, deporte);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteAñadeMarca(int id, java.sql.Ref marca) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.add_Marca(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setRef(3, marca);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaParticipanteEliminaMarca(int id, java.sql.Ref marca) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.remove_Marca(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setRef(3, marca);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static String consultaParticipanteNombre(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Nombre");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaParticipanteApellidos(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Apellidos FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Apellidos");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaParticipanteNacimiento(int id) {
+    	Date fecha = null;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nacimiento FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	fecha = rs.getDate("Nacimiento");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	String result = "", aux;
+    	aux = fecha.toString();
+    	result += aux.substring(8, 10) + "-";
+    	result += getMes(aux.substring(4, 7) + "-");
+    	result += aux.substring(24, 28);
+    	return result;
+    }
+    
+    public static String getMes(String mes) {
+    	if (mes.equalsIgnoreCase("JAN"))
+    		return "01";
+    	else if (mes.equalsIgnoreCase("FEB"))
+    		return "02";
+    	else if (mes.equalsIgnoreCase("MAR"))
+    		return "03";
+    	else if (mes.equalsIgnoreCase("APR"))
+    		return "04";
+    	else if (mes.equalsIgnoreCase("MAY"))
+    		return "05";
+    	else if (mes.equalsIgnoreCase("JUN"))
+    		return "06";
+    	else if (mes.equalsIgnoreCase("JUL"))
+    		return "07";
+    	else if (mes.equalsIgnoreCase("AUG"))
+    		return "08";
+    	else if (mes.equalsIgnoreCase("SEP"))
+    		return "09";
+    	else if (mes.equalsIgnoreCase("OCT"))
+    		return "10";
+    	else if (mes.equalsIgnoreCase("NOV"))
+    		return "11";
+    	else return "12";
+    }
+    
+    public static char consultaParticipanteGenero(int id) {
+    	char result = ' ';
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Genero FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Genero").charAt(0);
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static double consultaParticipantePeso(int id) {
+    	double result = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Peso FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDouble("Peso");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static double consultaParticipanteAltura(int id) {
+    	double result = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Altura FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDouble("Altura");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaParticipantePais(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT DEREF(p.Origen).Nombre NombrePais FROM Participante p WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("NombrePais");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static ArrayList<java.sql.Ref> consultaParticipanteDeportes(int id) {
+    	ArrayList<java.sql.Ref> deportes = new ArrayList<>();
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Deportes FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	while(rs.next())
+        		deportes.add(rs.getRef("Deportes"));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return deportes;
+    }
+    
+    public static ArrayList<java.sql.Ref> consultaParticipanteMarcas(int id) {
+    	ArrayList<java.sql.Ref> marcas = new ArrayList<>();
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Marcas FROM Participante WHERE Dorsal = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	while(rs.next())
+        		marcas.add(rs.getRef("Marcas"));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return marcas;
     }
     
     public static void eliminaParticipanteMenu() {
-    	
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int id;
+            System.out.println("===== ELIMINANDO A UN PARTICIPANTE =====");
+            do {
+            	System.out.print("Introduce el dorsal del participante que desea eliminar: ");
+            	id = input.nextInt();
+                input.nextLine();
+                if (id < 0 || id > 9999)
+                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
+            } while (id < 0 || id > 9999);
+            
+            eliminaParticipante(id);
+            
+            System.out.println("\n¿Desea seguir eliminando participantes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaParticipante(int id) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionParticipantes.eliminar(?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void gestionaPuntuaciones() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+            int tipoOperacion;
+            do {
+                System.out.println("===== GESTION DE PUNTUACIONES =====");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("1- A\u00f1adir una puntuacion");
+                System.out.println("2- Modificar una puntuacion");
+                System.out.println("3- Eliminar una puntuacion");
+                tipoOperacion = input.nextInt();
+                input.nextLine();
+                System.out.println("\n");
+                if(tipoOperacion > 3 || tipoOperacion < 1)
+                    System.out.println("La operacion introducida no es valida. Las opciones permitidas van del 1 al 3.\n");
+            } while (tipoOperacion > 3 || tipoOperacion < 1);
+            switch (tipoOperacion) {
+                case 1:
+                    añadePuntuacionMenu();
+                    break;
+                case 2:
+                    modificaPuntuacionMenu();
+                    break;
+                case 3:
+                    eliminaPuntuacionMenu();
+                    break;
+            }
+            System.out.println("¿Desea seguir trabajando con las puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void añadePuntuacionMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        int dorsal, id;
+        double valor;
+        boolean deporteOk, participanteOk;
+        java.sql.Ref participante = null, deporte = null;
         
+        do {
+            System.out.println("===== A\u00f1ADIENDO UNA PUNTUACION =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre la puntuacion que desea registrar: ");
+            
+            do {
+	            do {
+	            	System.out.print("- Dorsal del participante: ");
+	                dorsal = input.nextInt();
+	                input.nextLine();
+	                if (dorsal < 0 || dorsal > 9999)
+	                	System.out.println("El dorsal no puede ser negativo o superior a 9999.");
+	            } while (dorsal < 0 || dorsal > 9999);
+	            if (!(participanteOk = compruebaParticipante(dorsal, participante)))
+	            	System.out.println("No existe ningun participante con el dorsal indicado.");
+            } while (!participanteOk);
+           
+            do {
+	            do {
+	            	System.out.print("- ID del deporte en el que ha obtenido la puntuacion: ");
+	                id = input.nextInt();
+	                input.nextLine();
+	                if (id < 0)
+	                	System.out.println("El ID no puede ser negativo.");
+	            } while (id < 0);
+	            if (!(deporteOk = compruebaDeporte2(id, deporte)))
+	            	System.out.println("No existe ningun deporte asociado al ID indicado.");
+            } while (!deporteOk);
+            
+            do {
+            	System.out.print("- Puntuacion obtenida: ");
+                valor = input.nextDouble();
+                input.nextLine();
+                if (valor < 0)
+                	System.out.println("La puntuacion no puede ser negativa.");
+            } while (valor < 0);
+            
+            añadePuntuacion(valor, participante, deporte);
+            
+            System.out.println("\n¿Desea introducir mas puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean compruebaParticipante(int dorsal, java.sql.Ref participante) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(p) ref FROM Participante p WHERE Id = ?");
+        	pstmt.setInt(1, dorsal);
+        	ResultSet rs = pstmt.executeQuery();
+        	if (!rs.next())
+        		return false;
+        	else 
+        		participante = rs.getRef("ref");
+        	conn.close();
+        } catch (Exception e) { return false; }
+    	return true;
+    }
+    
+    public static boolean compruebaDeporte2(int id, java.sql.Ref deporte) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT REF(d) ref FROM Deporte d WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	if (!rs.next())
+        		return false;
+        	else 
+        		deporte = rs.getRef("ref");
+        	conn.close();
+        } catch (Exception e) { return false; }
+    	return true;
+    }
+    
+    public static void añadePuntuacion(double valor, java.sql.Ref participante, java.sql.Ref deporte) {
+    	
     }
     
     public static void gestionaPaises() {
