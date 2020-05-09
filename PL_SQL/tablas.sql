@@ -11,7 +11,7 @@ CREATE TABLE Imagen OF T_Imagen (
 		PCTINCREASE 15
 		MINEXTENTS 2
 		MAXEXTENTS 12
-	);
+	)
 );
 
 CREATE TABLE Pais OF T_Pais (
@@ -25,7 +25,7 @@ CREATE TABLE Pais OF T_Pais (
 		PCTINCREASE 10
 		MINEXTENTS 2
 		MAXEXTENTS 10
-	);
+	)
 );
 
 CREATE TABLE Marca OF T_Marca (
@@ -40,7 +40,7 @@ CREATE TABLE Marca OF T_Marca (
 		PCTINCREASE 5
 		MINEXTENTS 2
 		MAXEXTENTS 14
-	);
+	)
 );
 
 CREATE TABLE Deporte OF T_Deporte (
@@ -60,7 +60,7 @@ CREATE TABLE Deporte OF T_Deporte (
 		PCTINCREASE 15
 		MINEXTENTS 2
 		MAXEXTENTS 8
-	);
+	)
 );
 
 NESTED TABLE Participantes STORE AS NTParticipantes;
@@ -85,7 +85,7 @@ CREATE TABLE Participante OF T_Participante (
 		PCTINCREASE 20
 		MINEXTENTS 2
 		MAXEXTENTS 14
-	);
+	)
 );
 
 NESTED TABLE Deportes STORE AS NTDeportes;
@@ -102,7 +102,7 @@ CREATE TABLE Puntuacion OF T_Puntuacion (
 		PCTINCREASE 12
 		MINEXTENTS 2
 		MAXEXTENTS 13
-	);
+	)
 );
 
 /* -- ¿INNECESARIO? --
