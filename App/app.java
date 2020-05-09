@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.Vector;
+import java.io.File;
+import java.nio.file.Files;
 import java.sql.*;
 import oracle.jdbc.*;
 import oracle.jdbc.pool.*;
@@ -316,20 +318,19 @@ public class app {
         char repetir;
         do {
         	int id;
+        	boolean existeDep = false;
             System.out.println("===== MODIFICANDO UN DEPORTE =====");
             do {
-            	System.out.print("Introduce el ID del deporte que desea modificar: ");
-            	id = input.nextInt();
-                input.nextLine();
-                if (id < 0)
-                	System.out.println("El ID no puede ser negativo.\n");
-            } while (id < 0);
-            
-            if (!existeDeporte(id)) {
-            	System.out.println("El ID indicado no esta asociado a ningun deporte. Volviendo al menu anterior...");
-            	gestionaDeportes();
-            	return;
-            }
+            	do {
+	            	System.out.print("Introduce el ID del deporte que desea modificar: ");
+	            	id = input.nextInt();
+	                input.nextLine();
+	                if (id < 0)
+	                	System.out.println("El ID no puede ser negativo.\n");
+	            } while (id < 0);
+	            if (!(existeDep = existeDeporte(id)))
+	            	System.out.println("El ID indicado no esta asociado a ningun deporte.");
+            } while (!existeDep);
             
             int aModificar;
             do {
@@ -1337,21 +1338,19 @@ public class app {
         char repetir;
         do {
         	int id;
+            boolean participanteOk = false;
             System.out.println("===== MODIFICANDO UN PARTICIPANTE =====");
             do {
-            	System.out.print("Introduce el numero del dorsal del participante que desea modificar: ");
-            	id = input.nextInt();
-                input.nextLine();
-                if (id < 0 || id > 9999)
-                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
-            } while (id < 0 || id > 9999);
-            
-            if (!existeParticipante(id)) {
-            	System.out.println("El dorsal indicado no esta asociado a ningun participante. Volviendo al menu anterior...");
-            	gestionaParticipantes();
-            	return;
-            }
-            
+            	do {
+	            	System.out.print("Introduce el numero del dorsal del participante que desea modificar: ");
+	            	id = input.nextInt();
+	                input.nextLine();
+	                if (id < 0 || id > 9999)
+	                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
+            	} while (id < 0 || id > 9999);
+	            if (!(participanteOk = existeParticipante(id)))
+	            	System.out.println("El dorsal indicado no esta asociado a ningun participante.");
+            } while (!participanteOk);
             int aModificar;
             do {
                 System.out.println("Indique a continuacion la opcion que desea modificar del participante indicado: ");
@@ -2142,19 +2141,1067 @@ public class app {
     }
     
     public static void añadePuntuacion(double valor, java.sql.Ref participante, java.sql.Ref deporte) {
+    	try {
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPuntuacion.insertar(?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setRef(2, participante);
+        	cs.setRef(3, deporte);
+        	cs.setDouble(4, valor);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaPuntuacionMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int dorsal, id;
+            boolean participanteOk = false, deporteOk = false, puntuacionOk = false;
+            java.sql.Ref participante = null, deporte = null;
+            System.out.println("===== MODIFICANDO UNA PUNTUACION =====");
+            do {
+	            do {
+	            	do {
+		            	System.out.print("Introduce el numero del dorsal del participante: ");
+		            	dorsal = input.nextInt();
+		                input.nextLine();
+		                if (dorsal < 0 || dorsal > 9999)
+		                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
+		            } while (dorsal < 0 || dorsal > 9999);
+		            if (!(participanteOk = compruebaParticipante(dorsal, participante)))
+		            	System.out.println("El dorsal indicado no esta asociado a ningun participante.");
+	            } while (!participanteOk);
+	            do {
+	            	do {
+		            	System.out.print("Introduce el ID del deporte: ");
+		            	id = input.nextInt();
+		                input.nextLine();
+		                if (id < 0)
+		                	System.out.println("El ID no puede ser negativo.\n");
+		            } while (id < 0);
+		            if (!(deporteOk = compruebaDeporte2(id, deporte)))
+		            	System.out.println("El ID indicado no esta asociado a ningun deporte.");
+	            } while (!deporteOk);
+	            if (!(puntuacionOk = existePuntuacion(participante, deporte)))
+	            	System.out.println("No existe una puntuacion vinculada a ese participante y deporte.");
+            } while (!puntuacionOk);
+            
+        	double valor, valorAct = consultaPuntuacionValor(participante, deporte);
+        	do {
+        		System.out.print("\nIntroduce la nueva puntuacion (Puntuacion anterior: " + valorAct + "): ");
+        		valor = input.nextDouble();
+        		input.nextLine();
+        		if (valor < 0)
+        			System.out.println("La puntuacion no puede ser negativa.");
+        	} while (valor < 0);
+        	modificaPuntuacion(participante, deporte, valor);
+            
+            System.out.println("\n¿Desea seguir modificando puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existePuntuacion(java.sql.Ref participante, java.sql.Ref deporte) {
+    	int count = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) total FROM Puntuacion WHERE Participante = ? AND Deporte = ?");
+        	pstmt.setRef(1, participante);
+        	pstmt.setRef(2, deporte);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	count = rs.getInt("total");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return count == 1;
+    }
+    
+    public static void modificaPuntuacion(java.sql.Ref participante, java.sql.Ref deporte, double valor) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPuntuacion.set_Valor(?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setRef(2, participante);
+        	cs.setRef(3, deporte);
+        	cs.setDouble(4, valor);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static double consultaPuntuacionValor(java.sql.Ref participante, java.sql.Ref deporte) {
+    	double result = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Valor FROM Puntuacion WHERE Participante = ? AND Deporte = ?");
+        	pstmt.setRef(1, participante);
+        	pstmt.setRef(2, deporte);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getDouble("Valor");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static void eliminaPuntuacionMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        java.sql.Ref participante = null, deporte = null;
+        boolean participanteOk, deporteOk, puntuacionOk;
+        do {
+        	int dorsal, id;
+	        System.out.println("===== ELIMINANDO UNA PUNTUACION =====");
+	        do {
+            	do {
+                   	System.out.print("Introduce el dorsal del participante: ");
+	            	dorsal = input.nextInt();
+	                input.nextLine();
+	                if (dorsal < 0 || dorsal > 9999)
+	                	System.out.println("El dorsal no puede ser negativo o superior a 9999.\n");
+            	} while (dorsal < 0 || dorsal > 9999);
+            	if (!(participanteOk = compruebaParticipante(dorsal, participante)))
+            		System.out.println("El dorsal indicado no esta asociado a ningun participante.");
+            } while (!participanteOk);
     	
+	    	do {
+	        	do {
+	        		System.out.print("Introduce el ID del deporte: ");
+	            	id = input.nextInt();
+	                input.nextLine();
+	                if (id < 0)
+	                	System.out.println("El ID no puede ser negativo.\n");
+	        	} while (id < 0);
+	        	if (!(deporteOk = compruebaDeporte2(id, deporte)))
+	        		System.out.println("El ID indicado no esta asociado a ningun deporte.");
+	    	} while (!deporteOk);
+            
+            eliminaPuntuacion(participante, deporte);
+            
+            System.out.println("\n¿Desea seguir eliminando puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaPuntuacion(java.sql.Ref participante, java.sql.Ref deporte) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPuntuacion.eliminar(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setRef(2, participante);
+        	cs.setRef(3, deporte);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void gestionaPaises() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+            int tipoOperacion;
+            do {
+                System.out.println("===== GESTION DE PAISES =====");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("1- A\u00f1adir un pais");
+                System.out.println("2- Modificar un pais");
+                System.out.println("3- Eliminar un pais");
+                tipoOperacion = input.nextInt();
+                input.nextLine();
+                System.out.println("\n");
+                if(tipoOperacion > 3 || tipoOperacion < 1)
+                    System.out.println("La operacion introducida no es valida. Las opciones permitidas van del 1 al 3.\n");
+            } while (tipoOperacion > 3 || tipoOperacion < 1);
+            switch (tipoOperacion) {
+                case 1:
+                    añadePaisMenu();
+                    break;
+                case 2:
+                    modificaPaisMenu();
+                    break;
+                case 3:
+                    eliminaPaisMenu();
+                    break;
+            }
+            System.out.println("¿Desea seguir trabajando con paises? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void añadePaisMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        String abreviatura, nombre, paisAct = "";
+        boolean abreviaturaNoOk;
         
+        do {
+            System.out.println("===== A\u00f1ADIENDO UN PAIS =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre el pais que desea registrar: ");
+            
+            do {
+	            do {
+	            	System.out.print("- Abreviatura que representa al pais (3 letras): ");
+	                abreviatura = input.nextLine();
+	                if (abreviatura == "" || abreviatura.length() != 3)
+	                	System.out.println("La abreviatura es obligatoria y debe estar formada por 3 letras.");
+	            } while (abreviatura == "" || abreviatura.length() != 3);
+	            if (abreviaturaNoOk = existePais(abreviatura, paisAct))
+	            	System.out.println("Ya existe un pais con la abreviatura indicada: " + paisAct + ".");
+            } while (!abreviaturaNoOk);
+           
+            do {
+            	System.out.print("- Nombre del pais: ");
+                nombre = input.nextLine();
+                if (nombre == "")
+                	System.out.println("El nombre del pais es obligatorio.");
+	        } while (nombre == "");
+            
+            añadePais(abreviatura, nombre);
+            
+            System.out.println("\n¿Desea introducir mas puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existePais(String abreviatura, String paisAct) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Pais WHERE Abreviatura = ?");
+        	pstmt.setString(1, abreviatura);
+        	ResultSet rs = pstmt.executeQuery();
+        	if(!rs.next())
+        		return false;
+        	else
+        		paisAct = rs.getString("Nombre");
+        	conn.close();
+        } catch (Exception e) { return false; }
+    	return true;
+    }
+    
+    public static void añadePais(String abrev, String nombre) {
+    	try {
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPaises.insertar(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, abrev);
+        	cs.setString(3, nombre);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaPaisMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	String abreviatura;
+            boolean abreviaturaOk;
+            System.out.println("===== MODIFICANDO UN PAIS =====");
+            do {
+            	do {
+	            	System.out.print("Introduce la abreviatura que representa a dicho pais: ");
+	            	abreviatura = input.nextLine();
+	                if (abreviatura == "" || abreviatura.length() != 3)
+	                	System.out.println("La abreviatura es obligatoria y debe estar formada por 3 letras.\n");
+	            } while (abreviatura == "" || abreviatura.length() != 3);
+	            if (!(abreviaturaOk = existePais(abreviatura, null)))
+	            	System.out.println("La abreviatura indicada no esta asociada a ningun pais.");
+            } while (!abreviaturaOk);
+            
+            int aModificar;
+            do {
+                System.out.println("Indique a continuacion la opcion que desea modificar del pais indicado: ");
+                System.out.println("1- Abreviatura");
+                System.out.println("2- Nombre");
+                aModificar = input.nextInt();
+                input.nextLine();
+                if (aModificar < 1 || aModificar > 2)
+                	System.out.println("Opcion no valida. Por favor, introduce el valor 1 o 2.");
+            } while (aModificar < 1 || aModificar > 2);
+            switch (aModificar) {
+	            case 1:
+	            	String abreviaturaNew, paisAct = "";
+	            	boolean abreviaturaNoOk;
+	            	do {
+		            	do {
+		            		System.out.print("\nIntroduce la nueva abreviatura para el pais (abreviatura anterior: " + abreviatura + "): ");
+		            		abreviaturaNew = input.nextLine();
+		            		if (abreviaturaNew == "" || abreviaturaNew.length() != 3)
+		            			System.out.println("La abreviatura es obligatoria y debe estar formada por 3 letras.");
+		            	} while (abreviaturaNew == "" || abreviaturaNew.length() != 3);
+		            	if (abreviaturaNoOk = existePais(abreviaturaNew, paisAct))
+		            		System.out.println("Ya existe un pais con esa abreviatura: " + paisAct + ".");
+	            	} while (abreviaturaNoOk);
+	            	modificaPaisAbreviatura(abreviatura, abreviaturaNew);
+	            	break;
+	            	
+	            case 2:
+	            	String nombre, nombreAct = consultaPaisNombre(abreviatura);
+	            	do {
+	            		System.out.print("\nIntroduce el nombre del pais (nombre anterior: " + nombreAct + "): ");
+	            		nombre = input.nextLine();
+	            		if (nombre == "")
+	            			System.out.println("El nombre del pais es obligatorio.");
+	            	} while (nombre == "");
+	            	modificaPaisNombre(abreviatura, nombre);
+            }
+            
+            System.out.println("\n¿Desea seguir modificando paises? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void modificaPaisAbreviatura(String oldAbrev, String newAbrev) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPaises.set_Abreviatura(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, oldAbrev);
+        	cs.setString(3, newAbrev);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaPaisNombre(String abrev, String nombre) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPaises.set_Nombre(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, abrev);
+        	cs.setString(3, nombre);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static String consultaPaisNombre(String abrev) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Pais WHERE Abreviatura = ?");
+        	pstmt.setString(1, abrev);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Nombre");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static void eliminaPaisMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	String abrev;
+            System.out.println("===== ELIMINANDO UN PAIS =====");
+            do {
+            	System.out.print("Introduce la abreviatura del pais que desea eliminar: ");
+            	abrev = input.nextLine();
+                if (abrev == "" || abrev.length() != 3)
+                	System.out.println("La abreviatura es obligatoria y debe estar formada por 3 letras.\n");
+            } while (abrev == "" || abrev.length() != 3);
+            
+            eliminaPais(abrev);
+            
+            System.out.println("\n¿Desea seguir eliminando participantes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaPais(String abrev) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionPaises.eliminar(?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, abrev);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void gestionaMarcas() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+            int tipoOperacion;
+            do {
+                System.out.println("===== GESTION DE MARCAS PATROCINADORAS =====");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("1- A\u00f1adir una marca");
+                System.out.println("2- Modificar una marca");
+                System.out.println("3- Eliminar una marca");
+                tipoOperacion = input.nextInt();
+                input.nextLine();
+                System.out.println("\n");
+                if(tipoOperacion > 3 || tipoOperacion < 1)
+                    System.out.println("La operacion introducida no es valida. Las opciones permitidas van del 1 al 3.\n");
+            } while (tipoOperacion > 3 || tipoOperacion < 1);
+            switch (tipoOperacion) {
+                case 1:
+                    añadeMarcaMenu();
+                    break;
+                case 2:
+                    modificaMarcaMenu();
+                    break;
+                case 3:
+                    eliminaMarcaMenu();
+                    break;
+            }
+            System.out.println("¿Desea seguir trabajando con marcas? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void añadeMarcaMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        String nif, nombre, empresa;
+        boolean nifNoOk;
         
+        do {
+            System.out.println("===== A\u00f1ADIENDO UNA MARCA =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre la marca que desea registrar: ");
+            
+            do {
+	            do {
+	            	System.out.print("- NIF de la empresa (9 caracteres): ");
+	                nif = input.nextLine();
+	                if (nif == "" || nif.length() != 9)
+	                	System.out.println("El NIF es obligatorio y debe estar formado por 9 caracteres.");
+	            } while (nif == "" || nif.length() != 9);
+	            if (nifNoOk = existeMarca(nif, null))
+	            	System.out.println("Ya existe una marca con el NIF indicado.");
+            } while (nifNoOk);
+           
+            do {
+            	System.out.print("- Nombre comun de la empresa: ");
+                nombre = input.nextLine();
+                if (nombre == "")
+                	System.out.println("El nombre comun es obligatorio.");
+	        } while (nombre == "");
+            
+            do {
+            	System.out.print("- Nombre completo de la empresa: ");
+                empresa = input.nextLine();
+                if (empresa == "")
+                	System.out.println("El nombre completo es obligatorio.");
+	        } while (empresa == "");
+            
+            añadeMarca(nif, nombre, empresa);
+            
+            System.out.println("\n¿Desea introducir mas marcas? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existeMarca(String nif, String empresa) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Empresa FROM Marca WHERE Nif = ?");
+        	pstmt.setString(1, nif);
+        	ResultSet rs = pstmt.executeQuery();
+        	if(!rs.next())
+        		return false;
+        	else
+        		empresa = rs.getString("Empresa");
+        	conn.close();
+        } catch (Exception e) { return false; }
+    	return true;
+    }
+    
+    public static void añadeMarca(String nif, String nombre, String empresa) {
+    	try {
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionMarcas.insertar(?,?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nif);
+        	cs.setString(3, nombre);
+        	cs.setString(4, empresa);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaMarcaMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	String nif;
+            boolean nifOk;
+            System.out.println("===== MODIFICANDO UNA MARCA =====");
+            do {
+            	do {
+	            	System.out.print("Introduce el NIF de la empresa: ");
+	            	nif = input.nextLine();
+	                if (nif == "" || nif.length() != 9)
+	                	System.out.println("El NIF es obligatorio y debe estar formado por 9 caracteres.\n");
+	            } while (nif == "" || nif.length() != 9);
+	            if (!(nifOk = existeMarca(nif, null)))
+	            	System.out.println("El NIF indicado no esta asociado a ninguna empresa.");
+            } while (!nifOk);
+            
+            int aModificar;
+            do {
+                System.out.println("Indique a continuacion la opcion que desea modificar de la marca indicada: ");
+                System.out.println("1- NIF");
+                System.out.println("2- Nombre comun de la empresa");
+                System.out.println("3- Nombre completo de la empresa");
+                aModificar = input.nextInt();
+                input.nextLine();
+                if (aModificar < 1 || aModificar > 3)
+                	System.out.println("Opcion no valida. Por favor, introduce un valor entre 1 y 3.");
+            } while (aModificar < 1 || aModificar > 3);
+            switch (aModificar) {
+	            case 1:
+	            	String nifNew, marcaAct = "";
+	            	boolean nifNoOk;
+	            	do {
+		            	do {
+		            		System.out.print("\nIntroduce un nuevo NIF para la marca (NIF anterior: " + nif + "): ");
+		            		nifNew = input.nextLine();
+		            		if (nifNew == "" || nifNew.length() != 9)
+		            			System.out.println("La abreviatura es obligatoria y debe estar formada por 3 letras.");
+		            	} while (nifNew == "" || nifNew.length() != 9);
+		            	if (nifNoOk = existeMarca(nifNew, marcaAct))
+		            		System.out.println("Ya existe una marca con ese NIF: " + marcaAct + ".");
+	            	} while (nifNoOk);
+	            	modificaMarcaNif(nif, nifNew);
+	            	break;
+	            	
+	            case 2:
+	            	String nombre, nombreAct = consultaMarcaNombre(nif);
+	            	do {
+	            		System.out.print("\nIntroduce el nombre comun de la empresa (nombre anterior: " + nombreAct + "): ");
+	            		nombre = input.nextLine();
+	            		if (nombre == "")
+	            			System.out.println("El nombre comun de la empresa es obligatorio.");
+	            	} while (nombre == "");
+	            	modificaMarcaNombre(nif, nombre);
+	            	break;
+	            	
+	            case 3:
+	            	String empresa, empresaAct = consultaMarcaEmpresa(nif);
+	            	do {
+	            		System.out.print("\nIntroduce el nombre completo de la empresa (nombre anterior: " + empresaAct + "): ");
+	            		empresa = input.nextLine();
+	            		if (empresa == "")
+	            			System.out.println("El nombre completo de la empresa es obligatorio.");
+	            	} while (empresa == "");
+	            	modificaMarcaEmpresa(nif, empresa);
+            }
+            
+            System.out.println("\n¿Desea seguir modificando marcas? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void modificaMarcaNif(String oldNif, String newNif) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionMarcas.set_Nif(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, oldNif);
+        	cs.setString(3, newNif);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaMarcaNombre(String nif, String nombre) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionMarcas.set_Nombre(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nif);
+        	cs.setString(3, nombre);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaMarcaEmpresa(String nif, String empresa) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionMarcas.set_Empresa(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nif);
+        	cs.setString(3, empresa);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static String consultaMarcaNombre(String nif) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Marca WHERE Nif = ?");
+        	pstmt.setString(1, nif);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Nombre");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static String consultaMarcaEmpresa(String nif) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Empresa FROM Marca WHERE Nif = ?");
+        	pstmt.setString(1, nif);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Empresa");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static void eliminaMarcaMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	String nif;
+            System.out.println("===== ELIMINANDO UNA MARCA =====");
+            do {
+            	System.out.print("Introduce el NIF de la empresa que desea eliminar: ");
+            	nif = input.nextLine();
+                if (nif == "" || nif.length() != 9)
+                	System.out.println("El NIF es obligatorio y debe estar formado por 9 caracteres.\n");
+            } while (nif == "" || nif.length() != 9);
+            
+            eliminaMarca(nif);
+            
+            System.out.println("\n¿Desea seguir eliminando marcas? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaMarca(String nif) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionMarcas.eliminar(?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, nif);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void gestionaImagenes() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+            int tipoOperacion;
+            do {
+                System.out.println("===== GESTION DE IMAGENES =====");
+                System.out.println("Por favor, indicanos que desea hacer (introduce el numero de la opcion deseada): ");
+                System.out.println("1- A\u00f1adir una imagen");
+                System.out.println("2- Modificar una imagen");
+                System.out.println("3- Eliminar una imagen");
+                tipoOperacion = input.nextInt();
+                input.nextLine();
+                System.out.println("\n");
+                if(tipoOperacion > 3 || tipoOperacion < 1)
+                    System.out.println("La operacion introducida no es valida. Las opciones permitidas van del 1 al 3.\n");
+            } while (tipoOperacion > 3 || tipoOperacion < 1);
+            switch (tipoOperacion) {
+                case 1:
+                    añadeImagenMenu();
+                    break;
+                case 2:
+                    modificaImagenMenu();
+                    break;
+                case 3:
+                    eliminaImagenMenu();
+                    break;
+            }
+            System.out.println("¿Desea seguir trabajando con imagenes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static void añadeImagenMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        String ruta, descripcion;
+        boolean rutaOk;
         
+        do {
+            System.out.println("===== A\u00f1ADIENDO UNA IMAGEN =====");
+            System.out.println("Por favor, introduce los siguientes datos sobre la imagen que desea registrar: ");
+            do {
+	            do {
+	            	System.out.print("- Ruta completa de la localizacion de la imagen en su equipo: ");
+	                ruta = input.nextLine();
+	                if (ruta == "")
+	                	System.out.println("La ruta no puede estar vacia.");
+		        } while (ruta == "");
+	            if (!(rutaOk = existeRuta(ruta)))
+	            	System.out.println("La ruta especificada no existe.");
+	            if (rutaOk && !pesoValido(ruta)) {
+	            	rutaOk = false;
+	            	System.out.println("La imagen seleccionada supera los 250KB permitidos.");
+	            }
+            } while (!rutaOk);
+           
+            do {
+            	System.out.print("- Descripcion de la imagen: ");
+                descripcion = input.nextLine();
+                if (descripcion == "")
+                	System.out.println("La descripcion es obligatoria.");
+	        } while (descripcion == "");
+            
+            añadeImagen(descripcion, ruta);
+            
+            System.out.println("\n¿Desea introducir mas puntuaciones? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existeRuta(String ruta) {
+    	File imagen = null;
+    	try {
+            imagen = new File(ruta);
+            return imagen.createNewFile();
+        } catch(Exception e) {}
+    	return imagen.exists();
+    }
+    
+    public static boolean pesoValido(String ruta) {
+    	File imagen = null;
+    	try {
+            imagen = new File(ruta);
+        } catch(Exception e) {}
+        return (imagen.length()/1024 <= 250);
+    }
+    
+    public static void añadeImagen(String descripcion, String ruta) {
+    	try {
+    		File imagen = new File(ruta);
+    		OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	Blob recurso = conn.createBlob();
+        	recurso.setBytes(1, Files.readAllBytes(imagen.toPath()));
+        	CallableStatement cs = conn.prepareCall("{? = call GestionImagenes.insertar(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setString(2, descripcion);
+        	cs.setBlob(3, recurso);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaImagenMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int id;
+            boolean imagenOk;
+            System.out.println("===== MODIFICANDO UNA IMAGEN =====");
+            do {
+            	do {
+	            	System.out.print("Introduce el ID de la imagen: ");
+	            	id = input.nextInt();
+	            	input.nextLine();
+	                if (id < 0)
+	                	System.out.println("El ID no puede ser negativo.\n");
+	            } while (id < 0);
+	            if (!(imagenOk = existeImagen(id)))
+	            	System.out.println("El ID indicado no esta asociado a ninguna imagen.");
+            } while (!imagenOk);
+            
+            int aModificar;
+            do {
+                System.out.println("Indique a continuacion la opcion que desea modificar de la imagen indicada: ");
+                System.out.println("1- Ruta de la imagen");
+                System.out.println("2- Descripcion");
+                aModificar = input.nextInt();
+                input.nextLine();
+                if (aModificar < 1 || aModificar > 2)
+                	System.out.println("Opcion no valida. Por favor, introduce el valor 1 o 2.");
+            } while (aModificar < 1 || aModificar > 2);
+            switch (aModificar) {
+	            case 1:
+	            	String ruta;
+	            	do {
+	            		System.out.print("\nIntroduce la nueva ruta de la imagen: ");
+	            		ruta = input.nextLine();
+	            		if (ruta == "")
+	            			System.out.println("La ruta de la imagen es obligatoria.");
+	            	} while (ruta == "");
+	            	modificaImagenRecurso(id, ruta);
+	            	break;
+	            	
+	            case 2:
+	            	String descripcion, descripcionAct = consultaImagenDescripcion(id);
+	            	do {
+	            		System.out.print("\nIntroduce la nueva descripcion (descripcion anterior: " + descripcionAct + "): ");
+	            		descripcion = input.nextLine();
+	            		if (descripcion == "")
+	            			System.out.println("La descripcion de la imagen es obligatoria.");
+	            	} while (descripcion == "");
+	            	modificaImagenDescripcion(id, descripcion);
+            }
+            
+            System.out.println("\n¿Desea seguir modificando imagenes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 's' || repetir == 'S');
+    }
+    
+    public static boolean existeImagen(int id) {
+    	int count = 0;
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT count(*) total FROM Imagen WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	count = rs.getInt("total");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return count == 1;
+    }
+    
+    public static void modificaImagenDescripcion(int id, String descripcion) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionImagenes.set_Descripcion(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setString(3, descripcion);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static void modificaImagenRecurso(int id, String ruta) {
+    	try {
+    		File imagen = new File(ruta);
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	Blob recurso = conn.createBlob();
+        	recurso.setBytes(1, Files.readAllBytes(imagen.toPath()));
+        	CallableStatement cs = conn.prepareCall("{? = call GestionImagenes.set_Recurso(?,?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.setBlob(3, recurso);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    }
+    
+    public static String consultaImagenDescripcion(int id) {
+    	String result = "";
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Descripcion FROM Imagen WHERE Id = ?");
+        	pstmt.setInt(1, id);
+        	ResultSet rs = pstmt.executeQuery();
+        	rs.next();
+        	result = rs.getString("Descripcion");
+        	
+        	conn.close();
+        } catch (Exception e) {}
+    	return result;
+    }
+    
+    public static void eliminaImagenMenu() {
+    	Scanner input = new Scanner(System.in);
+        char repetir;
+        do {
+        	int id;
+            System.out.println("===== ELIMINANDO UNA IMAGEN =====");
+            do {
+            	System.out.print("Introduce el ID de la imagen que desea eliminar: ");
+            	id = input.nextInt();
+            	input.nextLine();
+                if (id < 0)
+                	System.out.println("El ID no puede ser negativo.\n");
+            } while (id < 0);
+            
+            eliminaImagen(id);
+            
+            System.out.println("\n¿Desea seguir eliminando imagenes? (s/n)");
+            repetir = input.next().charAt(0);
+        } while (repetir == 'S' || repetir == 's');
+    }
+    
+    public static void eliminaImagen(int id) {
+    	try {
+        	OracleDataSource ods = new OracleDataSource();
+        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
+        	ods.setUser("usuario");
+        	ods.setPassword("usuario");
+        	Connection conn = ods.getConnection();
+        	
+        	CallableStatement cs = conn.prepareCall("{? = call GestionImagenes.eliminar(?)}");
+        	cs.registerOutParameter(1, Types.VARCHAR);
+        	cs.setInt(2, id);
+        	cs.executeUpdate();
+        	System.out.println("\n" + cs.getString(1));
+        	
+        	conn.close();
+        } catch (Exception e) {}
     }
     
     public static void userMenu() {

@@ -809,8 +809,8 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	
 	/*INSERT*/
 	FUNCTION insertar(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE,
 		Valor IN Puntuacion.Valor%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
@@ -851,8 +851,8 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	END set_Deporte;
 	
 	FUNCTION set_Valor(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE,
 		Valor IN Puntuacion.Valor%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
@@ -866,8 +866,8 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	
 	/*DELETE*/
 	FUNCTION eliminar(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Participante%ROWTYPE
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
 		IF (aux(Participante, Deporte) > 0) THEN
