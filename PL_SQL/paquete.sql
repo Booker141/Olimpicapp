@@ -684,6 +684,7 @@ CREATE OR REPLACE PACKAGE GestionImagenes AS
 		Id IN Imagen.Id%TYPE,
 		Descripcion IN Imagen.Descripcion%TYPE
 	) RETURN VARCHAR2;
+	
 	FUNCTION set_Recurso(
 		Id IN Imagen.Id%TYPE,
 		Recurso IN Imagen.Recurso%TYPE
