@@ -3,23 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
-import java.util.Vector;
-import java.io.File;
-import java.nio.file.Files;
-import java.sql.*;
-import oracle.jdbc.*;
-import oracle.jdbc.pool.*;
-import oracle.sql.*;
 
-
+/**
+ *
+ * @author Carpio-Desktop
+ */
 public class app {
     
     public static void main(String[] args) {
@@ -38,11 +27,13 @@ public class app {
         } while (rol > 2 || rol < 1);
         switch (rol) {
             case 1: 
-                adminMenu();
+                menuAdmin.adminMenu();
                 break;
             case 2: 
-                userMenu();
+                menuUsuario.userMenu();
                 break;
         }
+        input.close();
     }
- 
+    
+}

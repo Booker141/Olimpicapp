@@ -1,31 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
-import java.util.Vector;
-import java.io.File;
-import java.nio.file.Files;
 import java.sql.*;
-import oracle.jdbc.*;
 import oracle.jdbc.pool.*;
-import oracle.sql.*;
 
-/**
- *
- * @author Carpio-Desktop
- */
-public class usuario {
-    
-    public static void userMenu() {
+public class menuUsuario {
+	
+	public static void userMenu() {
         Scanner input = new Scanner(System.in);
         char repetir;
         do {
@@ -62,442 +43,9 @@ public class usuario {
             System.out.println("¿Desea seguir operando como usuario? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
-        
-    public static String consultaDeporteNombre(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Deporte WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Nombre");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static String consultaDeporteDescripcion(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Descripcion FROM Deporte WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Descripcion");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static double consultaDeporteRecord(int id) {
-    	double result = 0;
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Record FROM Deporte WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getDouble("Record");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static String consultaDeporteFechaIni(int id) {
-    	Date result = new Date();
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Fecha_Ini FROM Deporte WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getTimestamp("Fecha_Ini");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	String resultString = result.toString();
-    	String finalResult = resultString.substring(8, 10);
-    	finalResult += "-" + resultString.substring(5, 7);
-    	finalResult += "-" + resultString.substring(0, 4);
-    	finalResult += " " + resultString.substring(11, 16);
-    	
-    	return finalResult;
-    }
-    
-    public static String consultaDeporteFechaFin(int id) {
-    	Date result = new Date();
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Fecha_Fin FROM Deporte WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getTimestamp("Fecha_Fin");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	String resultString = result.toString();
-    	String finalResult = resultString.substring(8, 10);
-    	finalResult += "-" + resultString.substring(5, 7);
-    	finalResult += "-" + resultString.substring(0, 4);
-    	finalResult += " " + resultString.substring(11, 16);
-    	
-    	return finalResult;
-    }
-    
-    public static String consultaDeporteTipo(int id) {
-    	String aux1 = "";
-    	Integer tipo = 0;
-    	Double aux2 = 0d;
-    	compruebaDeporteTipo(id, tipo, aux1, aux2);
-    	switch(tipo) {
-	    	case 1: return "Acuatico";
-	    	case 2: return "Velocidad";
-	    	case 3: return "Pelota";
-	    	case 4: return "Fuerza";
-	    	default: return "Combate";
-    	}
-    }
-    
-    public static String consultaDeporteAdicionalText(int id) {
-    	String result = "";
-    	Integer tipo = 0;
-    	Double aux = 0d;
-    	compruebaDeporteTipo(id, tipo, result, aux);
-    	return result;
-    }
-    
-    public static double consultaDeporteAdicionalNum(int id) {
-    	String aux = "";
-    	Integer tipo = 0;
-    	Double result = 0d;
-    	compruebaDeporteTipo(id, tipo, aux, result);
-    	return result;
-    }
-    
-     public static String consultaParticipanteNombre(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Nombre");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static String consultaParticipanteApellidos(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Apellidos FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Apellidos");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static String consultaParticipanteNacimiento(int id) {
-    	Date fecha = null;
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nacimiento FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	fecha = rs.getDate("Nacimiento");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	String result = "", aux;
-    	aux = fecha.toString();
-    	result += aux.substring(8, 10) + "-";
-    	result += getMes(aux.substring(4, 7) + "-");
-    	result += aux.substring(24, 28);
-    	return result;
-    }
-    
-    public static String getMes(String mes) {
-    	if (mes.equalsIgnoreCase("JAN"))
-    		return "01";
-    	else if (mes.equalsIgnoreCase("FEB"))
-    		return "02";
-    	else if (mes.equalsIgnoreCase("MAR"))
-    		return "03";
-    	else if (mes.equalsIgnoreCase("APR"))
-    		return "04";
-    	else if (mes.equalsIgnoreCase("MAY"))
-    		return "05";
-    	else if (mes.equalsIgnoreCase("JUN"))
-    		return "06";
-    	else if (mes.equalsIgnoreCase("JUL"))
-    		return "07";
-    	else if (mes.equalsIgnoreCase("AUG"))
-    		return "08";
-    	else if (mes.equalsIgnoreCase("SEP"))
-    		return "09";
-    	else if (mes.equalsIgnoreCase("OCT"))
-    		return "10";
-    	else if (mes.equalsIgnoreCase("NOV"))
-    		return "11";
-    	else return "12";
-    }
-    
-      public static char consultaParticipanteGenero(int id) {
-    	char result = ' ';
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Genero FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Genero").charAt(0);
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-      
-    public static double consultaParticipantePeso(int id) {
-    	double result = 0;
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Peso FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getDouble("Peso");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-    public static double consultaParticipanteAltura(int id) {
-    	double result = 0;
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Altura FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getDouble("Altura");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-     public static String consultaParticipantePais(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT DEREF(p.Origen).Nombre NombrePais FROM Participante p WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("NombrePais");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-       public static ArrayList<java.sql.Ref> consultaParticipanteDeportes(int id) {
-    	ArrayList<java.sql.Ref> deportes = new ArrayList<>();
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Deportes FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	while(rs.next())
-        		deportes.add(rs.getRef("Deportes"));
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return deportes;
-    }
-    
-     public static ArrayList<java.sql.Ref> consultaParticipanteMarcas(int id) {
-    	ArrayList<java.sql.Ref> marcas = new ArrayList<>();
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Marcas FROM Participante WHERE Dorsal = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	while(rs.next())
-        		marcas.add(rs.getRef("Marcas"));
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return marcas;
-    }
-     
-    public static String consultaPaisNombre(String abrev) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Pais WHERE Abreviatura = ?");
-        	pstmt.setString(1, abrev);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Nombre");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-     public static String consultaMarcaNombre(String nif) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Nombre FROM Marca WHERE Nif = ?");
-        	pstmt.setString(1, nif);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Nombre");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-     
-    public static String consultaMarcaEmpresa(String nif) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Empresa FROM Marca WHERE Nif = ?");
-        	pstmt.setString(1, nif);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Empresa");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-    
-     public static String consultaImagenDescripcion(int id) {
-    	String result = "";
-    	try {
-        	OracleDataSource ods = new OracleDataSource();
-        	ods.setURL("jdbc:oracle:thin:@//localhost:1521/XE");
-        	ods.setUser("usuario");
-        	ods.setPassword("usuario");
-        	Connection conn = ods.getConnection();
-        	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Descripcion FROM Imagen WHERE Id = ?");
-        	pstmt.setInt(1, id);
-        	ResultSet rs = pstmt.executeQuery();
-        	rs.next();
-        	result = rs.getString("Descripcion");
-        	
-        	conn.close();
-        } catch (Exception e) {}
-    	return result;
-    }
-     
     public static void consultaDeportesMenu() {
     	Scanner input = new Scanner(System.in);
         char repetir;
@@ -525,6 +73,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnDeporteMenu() {
@@ -547,6 +96,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando deportes especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnDeporte(int id) {
@@ -723,6 +273,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando participantes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnParticipanteMenu() {
@@ -745,6 +296,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando participantes especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnParticipante(int dorsal) {
@@ -796,7 +348,11 @@ public class usuario {
     	} catch (Exception e) {}
     }
     
-  
+    public static int fechaAEdad(java.sql.Date fecha) {
+    	LocalDate fechaNac = fecha.toLocalDate();
+    	LocalDate hoy = LocalDate.now();
+    	return Period.between(fechaNac, hoy).getYears();
+    }
     
     public static void consultaTodosParticipantes() {
     	System.out.println("A continuacion se listan todos los participantes registrados con informacion generica. Para mas informacion, consulte un participante concreto.");
@@ -853,6 +409,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando sobre medallas? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaMedallasParticipanteMenu() {
@@ -875,6 +432,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando las medallas de participantes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaMedallasParticipante(int dorsal) {
@@ -891,9 +449,9 @@ public class usuario {
     		while(rs.next()) {
     			String puesto = "";
     			switch(rs.getInt("Medalla")) {
-        			case 1: puesto = "Bronce"; break;
+        			case 1: puesto = "Oro"; break;
         			case 2: puesto = "Plata"; break;
-        			case 3: puesto = "Oro"; break;
+        			case 3: puesto = "Bronce"; break;
     			}
     			System.out.println("Obtenida medalla de " + puesto + " en " + rs.getString("Deporte"));
     		}
@@ -921,6 +479,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando las medallas de deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaMedallasDeporte(int id) {
@@ -937,9 +496,9 @@ public class usuario {
     		while(rs.next()) {
     			String puesto = "";
     			switch(rs.getInt("Medalla")) {
-        			case 1: puesto = "Bronce"; break;
+        			case 1: puesto = "Oro"; break;
         			case 2: puesto = "Plata"; break;
-        			case 3: puesto = "Oro"; break;
+        			case 3: puesto = "Bronce"; break;
     			}
     			System.out.println("La medalla de " + puesto + " es para " + rs.getString("Nombre") + " " + rs.getString("Apellidos"));
     		}
@@ -974,6 +533,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando sobre paises? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnPaisMenu() {
@@ -995,6 +555,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando paises especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnPais(String abrev) {
@@ -1068,6 +629,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando sobre imagenes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnaImagenMenu() {
@@ -1090,6 +652,7 @@ public class usuario {
             System.out.println("¿Desea seguir consultando imagenes especificas? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
+        input.close();
     }
     
     public static void consultaUnaImagen(int id) {
@@ -1136,5 +699,5 @@ public class usuario {
         	conn.close();
         } catch (Exception e) {}
     }
-    
+	
 }
