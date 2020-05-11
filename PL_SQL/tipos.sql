@@ -1,7 +1,7 @@
 CREATE OR REPLACE TYPE T_Imagen AS OBJECT (
 	Id NUMBER,
 	Descripcion VARCHAR2(32),
-	Recurso BLOB
+	Recurso BLOB(250K)
 );
 
 CREATE OR REPLACE TYPE T_Pais AS OBJECT (
@@ -12,7 +12,7 @@ CREATE OR REPLACE TYPE T_Pais AS OBJECT (
 CREATE OR REPLACE TYPE T_Marca AS OBJECT (
 	Nif CHAR(9),
 	Nombre VARCHAR2(16),
-	Empresa VARCHAR2(16)
+	Empresa VARCHAR2(32)
 );
 
 CREATE OR REPLACE TYPE T_Patrocinado_por AS TABLE OF REF T_Marca;
@@ -40,8 +40,8 @@ CREATE OR REPLACE TYPE T_Deporte AS OBJECT (
 	Nombre VARCHAR2(16),
 	Descripcion VARCHAR2(32),
 	Record NUMBER,
-	Fecha_Ini DATETIME,
-	Fecha_Fin DATETIME,
+	Fecha_Ini TIMESTAMP,
+	Fecha_Fin TIMESTAMP,
 	Participantes T_Participa,
 	MedallasOk BOOLEAN
 ) NOT FINAL;
