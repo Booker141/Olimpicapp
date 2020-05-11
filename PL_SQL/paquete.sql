@@ -503,7 +503,7 @@ CREATE OR REPLACE PACKAGE BODY GestionMarcas AS
 		Empresa IN Marca.Empresa%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		INSERT INTO Marca VALUES(Nif, Nombre, Empresa);
+		INSERT INTO Marca VALUES(T_Marca(Nif, Nombre, Empresa));
 		RETURN 'La marca indicada se ha registrado con éxito.';
 	EXCEPTION
 		WHEN DUP_VAL_ON_INDEX THEN
@@ -516,36 +516,36 @@ CREATE OR REPLACE PACKAGE BODY GestionMarcas AS
 		NuevoNif IN Marca.Nif%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Nif) > 0) THEN
+		/*IF (aux(Nif) > 0) THEN*/
 			UPDATE Marca SET Marca.Nif = NuevoNif WHERE Marca.Nif = Nif;
 			RETURN 'Marca actualizada con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ninguna marca con el Nif introducido.';
-		END IF;
+		END IF;*/
 	END set_Nif;
 	FUNCTION set_Nombre(
 		Nif IN Marca.Nif%TYPE,
 		Nombre IN Marca.Nombre%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Nif) > 0) THEN
+		/*IF (aux(Nif) > 0) THEN*/
 			UPDATE Marca SET Marca.Nombre = Nombre WHERE Marca.Nif = Nif;
 			RETURN 'Marca actualizada con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ninguna marca con el Nif introducido.';
-		END IF;
+		END IF;*/
 	END set_Nombre;
 	FUNCTION set_Empresa(
 		Nif IN Marca.Nif%TYPE,
 		Empresa IN Marca.Empresa%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Nif) > 0) THEN
+		/*IF (aux(Nif) > 0) THEN*/
 			UPDATE Marca SET Marca.Empresa = Empresa WHERE Marca.Nif = Nif;
 			RETURN 'Marca actualizada con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ninguna marca con el Nif introducido.';
-		END IF;
+		END IF;*/
 	END set_Empresa;
 	
 	/*DELETE*/
@@ -607,7 +607,7 @@ CREATE OR REPLACE PACKAGE BODY GestionPaises AS
 		Nombre IN Pais.Nombre%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		INSERT INTO Pais VALUES(Abrev, Nombre);
+		INSERT INTO Pais VALUES(T_Pais(Abrev, Nombre));
 		RETURN 'El país indicado se ha registrado correctamente.';
 	EXCEPTION
 		WHEN DUP_VAL_ON_INDEX THEN
@@ -620,24 +620,24 @@ CREATE OR REPLACE PACKAGE BODY GestionPaises AS
 		NuevaAbrev IN Pais.Abreviatura%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Abrev) > 0) THEN
+		/*IF (aux(Abrev) > 0) THEN*/
 			UPDATE Pais SET Pais.Abreviatura = NuevaAbrev WHERE Pais.Abreviatura = Abrev;
 			RETURN 'El país indicado se ha actualizado con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ningún país con la abreviatura introducida.';
-		END IF;
+		END IF;*/
 	END set_Abreviatura;
 	FUNCTION set_Nombre(
 		Abrev IN Pais.Abreviatura%TYPE,
 		Nombre IN Pais.Nombre%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Abrev) > 0) THEN
+		/*IF (aux(Abrev) > 0) THEN*/
 			UPDATE Pais SET Pais.Nombre = Nombre WHERE Pais.Abreviatura = Abrev;
 			RETURN 'El país indicado se ha actualizado con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ningún país con la abreviatura introducida.';
-		END IF;
+		END IF;*/
 	END set_Nombre;
 	
 	/*DELETE*/
@@ -701,7 +701,7 @@ CREATE OR REPLACE PACKAGE BODY GestionImagenes AS
 		Recurso IN Imagen.Recurso%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		INSERT INTO Imagen VALUES(NULL, Descripcion, Recurso);
+		INSERT INTO Imagen VALUES(T_Imagen(NULL, Descripcion, Recurso));
 		RETURN 'La imagen indicada se ha registrado correctamente.';
 	END insertar;
 	
@@ -711,24 +711,24 @@ CREATE OR REPLACE PACKAGE BODY GestionImagenes AS
 		Descripcion IN Imagen.Descripcion%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Id) > 0) THEN
+		/*IF (aux(Id) > 0) THEN*/
 			UPDATE Imagen SET Imagen.Descripcion = Descripcion WHERE Imagen.Id = Id;
 			RETURN 'La imagen indicada se ha modificado con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ninguna imagen asociada al ID indicado.';
-		END IF;
+		END IF;*/
 	END set_Descripcion;
 	FUNCTION set_Recurso(
 		Id IN Imagen.Id%TYPE,
 		Recurso IN Imagen.Recurso%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		IF (aux(Id) > 0) THEN
+		/*IF (aux(Id) > 0) THEN*/
 			UPDATE Imagen SET Imagen.Recurso = Recurso WHERE Imagen.Id = Id;
 			RETURN 'La imagen indicada se ha modificado con éxito.';
-		ELSE
+		/*ELSE
 			RETURN 'No existe ninguna imagen asociada al ID indicado.';
-		END IF;
+		END IF;*/
 	END set_Recurso;
 	
 	/*DELETE*/
@@ -749,40 +749,28 @@ END GestionImagenes;
 CREATE OR REPLACE PACKAGE GestionPuntuacion AS
 	/*Auxiliar*/
 	FUNCTION aux(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE
 	) RETURN NUMBER;
 	
 	/*INSERT*/
 	FUNCTION insertar(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE,
 		Valor IN Puntuacion.Valor%TYPE
 	) RETURN VARCHAR2;
 	
 	/*UPDATE*/
-	FUNCTION set_Participante(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
-		NuevoPart IN T_Participante%ROWTYPE
-	) RETURN VARCHAR2;
-	
-	FUNCTION set_Deporte(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
-		NuevoDep IN T_Deporte%ROWTYPE
-	) RETURN VARCHAR2;
-	
 	FUNCTION set_Valor(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE,
 		Valor IN Puntuacion.Valor%TYPE
 	) RETURN VARCHAR2;
 	
 	/*DELETE*/
 	FUNCTION eliminar(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Participante%ROWTYPE
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE
 	) RETURN VARCHAR2;
 END GestionPuntuacion;
 
@@ -790,11 +778,11 @@ END GestionPuntuacion;
 CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 /*Auxiliar*/
 	FUNCTION aux(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE
+		Participante IN T_Puntuacion.Participante%TYPE,
+		Deporte IN T_Puntuacion.Deporte%TYPE
 	) RETURN NUMBER IS
 	BEGIN
-		RETURN SELECT count(*) FROM Puntuacion WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+		RETURN SELECT count(*) FROM Puntuacion WHERE Puntuacion.Participante = Participante AND Puntuacion.Deporte = Deporte;
 	END aux;
 	
 	/*INSERT*/
@@ -804,7 +792,7 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 		Valor IN Puntuacion.Valor%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		INSERT INTO Puntuacion VALUES(Valor, 0, REF(Participante), REF(Deporte));
+		INSERT INTO Puntuacion VALUES(T_Puntuacion(Valor, 0, Participante, Deporte));
 		RETURN 'La puntuación para el participante y deporte indicados se ha registrado correctamente.';
 	EXCEPTION
 		WHEN DUP_VAL_ON_INDEX THEN
@@ -812,34 +800,6 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	END insertar;
 	
 	/*UPDATE*/
-	FUNCTION set_Participante(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
-		NuevoPart IN T_Participante%ROWTYPE
-	) RETURN VARCHAR2 IS
-	BEGIN
-		IF (aux(Participante, Deporte) > 0) THEN
-			UPDATE Puntuacion SET Puntuacion.Participante = REF(NuevoPart) WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
-			RETURN 'La puntuación se ha actualizado con éxito.';
-		ELSE
-			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
-		END IF;
-	END set_Participante;
-	
-	FUNCTION set_Deporte(
-		Participante IN T_Participante%ROWTYPE,
-		Deporte IN T_Deporte%ROWTYPE,
-		NuevoDep IN T_Deporte%ROWTYPE
-	) RETURN VARCHAR2 IS
-	BEGIN
-		IF (aux(Participante, Deporte) > 0) THEN
-			UPDATE Puntuacion SET Puntuacion.Deporte = REF(NuevoDep) WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
-			RETURN 'La puntuación se ha actualizado con éxito.';
-		ELSE
-			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
-		END IF;
-	END set_Deporte;
-	
 	FUNCTION set_Valor(
 		Participante IN T_Puntuacion.Participante%TYPE,
 		Deporte IN T_Puntuacion.Deporte%TYPE,
@@ -847,7 +807,7 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	) RETURN VARCHAR2 IS
 	BEGIN
 		IF (aux(Participante, Deporte) > 0) THEN
-			UPDATE Puntuacion SET Puntuacion.Valor = Valor WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			UPDATE Puntuacion SET Puntuacion.Valor = Valor WHERE Puntuacion.Participante = Participante AND Puntuacion.Deporte = Deporte;
 			RETURN 'La puntuación se ha actualizado con éxito.';
 		ELSE
 			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
@@ -861,7 +821,7 @@ CREATE OR REPLACE PACKAGE BODY GestionPuntuacion AS
 	) RETURN VARCHAR2 IS
 	BEGIN
 		IF (aux(Participante, Deporte) > 0) THEN
-			DELETE FROM Puntuacion WHERE Puntuacion.Participante = REF(Participante) AND Puntuacion.Deporte = REF(Deporte);
+			DELETE FROM Puntuacion WHERE Puntuacion.Participante = Participante AND Puntuacion.Deporte = Deporte;
 			RETURN 'La puntuación se ha eliminado con éxito.';
 		ELSE
 			RETURN 'No existe una puntuación asociada al participante y deporte indicados.';
