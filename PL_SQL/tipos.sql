@@ -30,15 +30,8 @@ CREATE OR REPLACE TYPE T_Participante AS OBJECT (
 	Altura NUMBER(3,2),
 	Origen REF T_Pais,
 	Deportes T_Compite_en,
-	Marcas T_Patrocinado_por,
-	MEMBER FUNCTION Edad RETURN NUMBER
+	Marcas T_Patrocinado_por
 );
-
-CREATE OR REPLACE TYPE BODY T_Participante IS
-MEMBER FUNCTION Edad RETURN NUMBER IS
-BEGIN
-	RETURN SELECT TRUNC(months_between(sysdate, fecha)/12) FROM (SELECT TO_DATE(Nacimiento, 'DD-MON-RR') fecha FROM dual);
-END;
 
 CREATE OR REPLACE TYPE T_Participa AS TABLE OF REF T_Participante;
 
