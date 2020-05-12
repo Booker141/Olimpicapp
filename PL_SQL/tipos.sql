@@ -70,7 +70,7 @@ CREATE OR REPLACE TYPE T_Deporte_Acuatico UNDER T_Deporte (
 /
 
 CREATE OR REPLACE TYPE T_Deporte_Velocidad UNDER T_Deporte (
-	Distancia NUMBER(6,2)
+	Distancia NUMBER(7,2)
 );
 /
 

@@ -2367,7 +2367,7 @@ public class menuAdmin {
 	            } while (abreviatura == "" || abreviatura.length() != 3);
 	            if (abreviaturaNoOk = existePais(abreviatura, paisAct))
 	            	System.out.println("Ya existe un pais con la abreviatura indicada: " + paisAct + ".");
-            } while (!abreviaturaNoOk);
+            } while (abreviaturaNoOk);
            
             do {
             	System.out.print("- Nombre del pais: ");

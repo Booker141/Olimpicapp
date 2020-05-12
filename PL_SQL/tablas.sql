@@ -43,6 +43,7 @@ STORAGE(
 );
 
 CREATE TABLE Deporte OF T_Deporte (
+	Id NOT NULL,
 	Nombre NOT NULL,
 	Descripcion NOT NULL,
 	Fecha_Ini NOT NULL,

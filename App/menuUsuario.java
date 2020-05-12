@@ -43,7 +43,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir operando como usuario? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaDeportesMenu() {
@@ -73,7 +73,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnDeporteMenu() {
@@ -96,7 +96,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando deportes especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnDeporte(int id) {
@@ -125,7 +125,7 @@ public class menuUsuario {
         		System.out.println("Fecha de comienzo: " + sFechaIni);
         		System.out.println("Fecha de fin: " + sFechaFin);
         		System.out.println("Numero de participantes: " + rs.getInt("Participantes"));
-        		System.out.println("Medallas asignadas: " + (rs.getBoolean("MedallasOk") ? "Si" : "No"));
+        		System.out.println("Medallas asignadas: " + ((rs.getInt("MedallasOk") == 1) ? "Si" : "No"));
         		
         		Integer iTipo = 0;
         		String sAdicional = "";
@@ -273,7 +273,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando participantes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnParticipanteMenu() {
@@ -296,7 +296,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando participantes especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnParticipante(int dorsal) {
@@ -409,7 +409,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando sobre medallas? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaMedallasParticipanteMenu() {
@@ -432,7 +432,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando las medallas de participantes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaMedallasParticipante(int dorsal) {
@@ -479,7 +479,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando las medallas de deportes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaMedallasDeporte(int id) {
@@ -533,7 +533,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando sobre paises? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        //
     }
     
     public static void consultaUnPaisMenu() {
@@ -555,7 +555,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando paises especificos? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        //
     }
     
     public static void consultaUnPais(String abrev) {
@@ -566,8 +566,7 @@ public class menuUsuario {
         	ods.setPassword("usuario");
         	Connection conn = ods.getConnection();
         	
-        	PreparedStatement pstmt = conn.prepareStatement("SELECT Abreviatura, Nombre FROM Pais WHERE Abreviatura = ?");
-        	pstmt.setString(1, abrev);
+        	PreparedStatement pstmt = conn.prepareStatement("SELECT Abreviatura, Nombre FROM Pais WHERE Abreviatura = '"+abrev+"'");
         	ResultSet rs = pstmt.executeQuery();
         	if(!rs.next())
         		System.out.println("No se ha encontrado ningun pais con la abreviatura indicada.\n");
@@ -629,7 +628,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando sobre imagenes? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnaImagenMenu() {
@@ -652,7 +651,7 @@ public class menuUsuario {
             System.out.println("¿Desea seguir consultando imagenes especificas? (s/n)");
             repetir = input.next().charAt(0);
         } while (repetir == 's' || repetir == 'S');
-        input.close();
+        
     }
     
     public static void consultaUnaImagen(int id) {

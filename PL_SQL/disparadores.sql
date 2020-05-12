@@ -1,17 +1,17 @@
-CREATE OR REPLACE TRIGGER ActualizaMedallas AFTER INSERT ON Puntuacion FOR EACH ROW
+/*CREATE OR REPLACE TRIGGER ActualizaMedallas AFTER INSERT ON Puntuacion FOR EACH ROW
 DECLARE
-	deporte := DEREF(:NEW.Deporte);
+	deporte := :NEW.Deporte.COLUMN_VALUE;
 	maxpuntuacion Puntuacion.Valor%TYPE;
 BEGIN
 	IF (deporte.Fecha_Fin < SysDate) THEN
-		maxpuntuacion := GestionDeportes.AsignaMedallas(deporte);
+		maxpuntuacion := GestionDeportes.asignaMedallas(deporte.Id);
 		IF (maxpuntuacion > deporte.Record) THEN
 			UPDATE Deporte SET Record = maxpuntuacion WHERE Id = deporte.Id;
 		END IF;
 		UPDATE Deporte SET MedallasOk = 1 WHERE Deporte.Id = deporte.Id;
 	END IF;
 END;
-/
+/*/
 
 /*CREATE OR REPLACE TRIGGER ActualizaParticipantesInsert AFTER INSERT ON Participante FOR EACH ROW
 BEGIN

@@ -2,9 +2,6 @@ DROP TABLE Imagen;
 DROP TABLE Marca;
 DROP TABLE Pais;
 DROP TABLE Puntuacion;
-DROP TABLE NTMarcas;
-DROP TABLE NTParticipantes;
-DROP TABLE NTDeportes;
 DROP TABLE Participante;
 DROP TABLE Deporte;
 DROP TYPE T_Puntuacion FORCE;
@@ -37,4 +34,4 @@ DROP PACKAGE GestionImagenes;
 @tablas.sql
 @paquete.sql
 @disparadores.sql
-/*@insercion.sql*/
+@insercion.sql
