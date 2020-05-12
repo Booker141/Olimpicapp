@@ -56,15 +56,15 @@ CREATE OR REPLACE PACKAGE BODY GestionDeportes AS
 	BEGIN	/*Según el tipo indicado se llama a un constructor u otro, y se usa un parámetro u otro.*/
 		CASE
 			WHEN Tipo = 'Acuatico' THEN
-				INSERT INTO Deporte VALUES(T_Deporte_Acuatico(NULL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, Adicional));
+				INSERT INTO Deporte VALUES(T_Deporte_Acuatico(idDeporte.NEXTVAL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, Adicional));
 			WHEN Tipo = 'Velocidad' THEN
-				INSERT INTO Deporte VALUES(T_Deporte_Velocidad(NULL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
+				INSERT INTO Deporte VALUES(T_Deporte_Velocidad(idDeporte.NEXTVAL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
 			WHEN Tipo = 'Pelota' THEN
-				INSERT INTO Deporte VALUES(T_Deporte_Pelota(NULL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
+				INSERT INTO Deporte VALUES(T_Deporte_Pelota(idDeporte.NEXTVAL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
 			WHEN Tipo = 'Fuerza' THEN
-				INSERT INTO Deporte VALUES(T_Deporte_Fuerza(NULL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
+				INSERT INTO Deporte VALUES(T_Deporte_Fuerza(idDeporte.NEXTVAL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, AdicionalNum));
 			ELSE	/*'Combate'*/
-				INSERT INTO Deporte VALUES(T_Deporte_Combate(NULL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, Adicional));
+				INSERT INTO Deporte VALUES(T_Deporte_Combate(idDeporte.NEXTVAL, Nombre, Descripcion, Record, Fecha_Ini, Fecha_Fin, T_Participa(), 0, Adicional));
 		END CASE;
 		RETURN 'El deporte se ha registrado correctamente.';
 	END insertar;
@@ -337,7 +337,7 @@ CREATE OR REPLACE PACKAGE BODY GestionParticipantes AS
 		Marcas IN T_Patrocinado_por%TYPE
 	) IS RETURN VARCHAR2
 	BEGIN
-		INSERT INTO Participante VALUES(T_Participante(NULL, Nombre, Apellidos, Nacimiento, Genero, Peso, Altura, Origen, Deportes, Marcas));
+		INSERT INTO Participante VALUES(T_Participante(idParticipante.NEXTVAL, Nombre, Apellidos, Nacimiento, Genero, Peso, Altura, Origen, Deportes, Marcas));
 		RETURN 'El participante se ha registrado correctamente.';
 	EXCEPTION
 		WHEN DUP_VAL_ON_INDEX THEN
@@ -752,7 +752,7 @@ CREATE OR REPLACE PACKAGE BODY GestionImagenes AS
 		Recurso IN Imagen.Recurso%TYPE
 	) RETURN VARCHAR2 IS
 	BEGIN
-		INSERT INTO Imagen VALUES(T_Imagen(NULL, Descripcion, Recurso));
+		INSERT INTO Imagen VALUES(T_Imagen(idImagen.NEXTVAL, Descripcion, Recurso));
 		RETURN 'La imagen indicada se ha registrado correctamente.';
 	END insertar;
 	/

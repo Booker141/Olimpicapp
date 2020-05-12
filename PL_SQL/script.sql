@@ -22,17 +22,19 @@ DROP TYPE T_Pais FORCE;
 DROP TYPE T_Participa FORCE;
 DROP TYPE T_Compite_en FORCE;
 DROP TYPE T_Deporte FORCE;
+DROP SEQUENCE idDeporte;
+DROP SEQUENCE idParticipante;
+DROP SEQUENCE idImagen;
 /*DROP PACKAGE GestionDeportes;
 DROP PACKAGE GestionParticipantes;
 DROP PACKAGE GestionPuntuacion;
 DROP PACKAGE GestionMarcas;
 DROP PACKAGE GestionPaises;
-DROP PACKAGE GestionImagenes;
-*/
+DROP PACKAGE GestionImagenes;*/
+
+@secuencias.sql
 @tipos.sql
 @tablas.sql
-/*
-@paquete.sql
+/*@paquete.sql
 @disparadores.sql
-@insercion.sql
-*/
+@insercion.sql*/
