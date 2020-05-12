@@ -13,8 +13,7 @@ BEGIN
 END;
 /
 
-/*
-CREATE OR REPLACE TRIGGER ActualizaParticipantesInsert AFTER INSERT ON Participante FOR EACH ROW
+/*CREATE OR REPLACE TRIGGER ActualizaParticipantesInsert AFTER INSERT ON Participante FOR EACH ROW
 BEGIN
 	FOR i IN 1 .. :NEW.Deportes.count LOOP
 		INSERT INTO TABLE(SELECT Participantes FROM Deporte WHERE Deporte.Id = DEREF(:NEW.Deportes(i)).Id) VALUES(REF(:NEW));
@@ -44,5 +43,4 @@ BEGIN
 	SELECT REF(p) INTO participante FROM Participante WHERE Participante.Deportes = :OLD;
 	INSERT INTO TABLE(SELECT Participantes FROM Deporte WHERE Deporte.Id = DEREF(:NEW).Id) VALUES(participante);
 END;
-/
-*/
+/*/
